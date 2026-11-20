@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light, minimal palette: white surfaces, zinc neutrals, one indigo accent. */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+    --primary: 243 75% 59%; /* indigo #4F46E5 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 10%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 42%;
+    --accent: 243 75% 59%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 88%;
+    --ring: 243 75% 59%;
+    --radius: 0.75rem;
+  }
+
+  /* Dark scope: only the login "lamp" scene, which is a night-time illustration. */
+  .theme-dark {
+    --background: 240 29% 5.5%;
+    --foreground: 240 20% 96%;
+    --card: 240 25% 9%;
+    --card-foreground: 240 20% 96%;
+    --popover: 240 25% 8%;
+    --popover-foreground: 240 20% 96%;
+    --secondary: 240 18% 14%;
+    --secondary-foreground: 240 20% 96%;
+    --muted: 240 18% 14%;
+    --muted-foreground: 240 10% 70%;
+    --border: 240 15% 18%;
+    --input: 240 15% 20%;
+    --ring: 243 75% 70%;
+    color-scheme: dark;
+  }
+
+  .light {
+    --background: 240 30% 98%;
+    --foreground: 240 30% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 30% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 30% 8%;
+    --secondary: 240 20% 94%;
+    --secondary-foreground: 240 30% 10%;
+    --muted: 240 20% 94%;
+    --muted-foreground: 240 10% 38%;
+    --border: 240 15% 88%;
+    --input: 240 15% 85%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    background: rgba(79, 70, 229, 0.18);
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Slim custom scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Frosted glass surface */
+  /* Plain card surface (kept the "glass" name so components need no changes). */
+  .glass {
+    @apply relative border border-border bg-card shadow-glass;
+  }
+  /* Sticky bars: near-opaque white with a light blur. */
+  .glass-strong {
+    @apply relative border border-border bg-background/90 backdrop-blur-md shadow-glass;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply text-primary;
+  }
+
+  /* 1px gradient border via mask */
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: hsl(var(--primary));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Subtle noise overlay for depth */
+  .noise::after { content: none; }
+}
+
+@layer components {
+  /* Range input with gradient fill. Set style={{ "--value": "42%" }} */
+  .range {
+    --value: 0%;
+    @apply h-4 w-full cursor-pointer appearance-none bg-transparent;
+  }
+  .range::-webkit-slider-runnable-track {
+    height: 4px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #4f46e5 var(--value), #e4e4e7 var(--value));
+  }
+  .range::-moz-range-track {
+    height: 4px;
+    border-radius: 999px;
+    background: #e4e4e7;
+  }
+  .range::-moz-range-progress {
+    height: 4px;
+    border-radius: 999px;
+    background: #4f46e5;
+  }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    margin-top: -5px;
+    height: 14px;
+    width: 14px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 0 1px #4f46e5, 0 1px 3px rgba(0,0,0,.2);
+    transform: scale(0);
+    transition: transform 150ms ease;
+  }
+  .range::-moz-range-thumb {
+    height: 14px;
+    width: 14px;
+    border: 0;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 0 1px #4f46e5, 0 1px 3px rgba(0,0,0,.2);
+    transform: scale(0);
+    transition: transform 150ms ease;
+  }
+  .range:hover::-webkit-slider-thumb,
+  .range:focus-visible::-webkit-slider-thumb { transform: scale(1); }
+  .range:hover::-moz-range-thumb,
+  .range:focus-visible::-moz-range-thumb { transform: scale(1); }
+  .range:focus-visible { @apply ring-0 ring-offset-0; }
+  .range:focus-visible::-webkit-slider-runnable-track { box-shadow: 0 0 0 3px hsl(var(--ring) / 0.5); }
+}
+
+@keyframes bead-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(200, 200, 255, 0.15); }
+  50% { box-shadow: 0 0 22px rgba(220, 220, 255, 0.45); }
+}

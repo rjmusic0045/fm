@@ -1,0 +1,297 @@
+// Lumen FM data model, MongoDB via Prisma.
+// NOTE: Prisma requires MongoDB to run as a replica set (Atlas does by default;
+// locally start mongod with --replSet rs0 and run rs.initiate() once).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AudioQuality {
+  LOW // 64 kbps
+  NORMAL // 128 kbps
+  HIGH // 320 kbps (Premium)
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+  FAMILY
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  UNPAID
+  PAUSED
+}
+
+enum BillingInterval {
+  MONTH
+  YEAR
+}
+
+enum FavoriteType {
+  SONG
+  STATION
+}
+
+// ---------------------------------------------------------------------------
+// NextAuth models
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String       @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?
+  role           Role         @default(USER)
+  onboarded      Boolean      @default(false)
+  favoriteGenres String[]     @default([])
+  audioQuality   AudioQuality @default(NORMAL)
+  theme          String       @default("dark")
+  lastLoginAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  accounts            Account[]
+  sessions            Session[]
+  playlists           Playlist[]
+  favorites           Favorite[]
+  history             ListeningHistory[]
+  subscription        Subscription?
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([createdAt])
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Used for email verification. `token` stores a SHA-256 hash of the emailed token.
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+/// Password reset links. `tokenHash` is SHA-256 of the emailed token; raw tokens are never stored.
+model PasswordResetToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  tokenHash String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Fixed-window rate limiting shared by all server instances.
+model RateLimit {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  key     String   @unique
+  count   Int
+  resetAt DateTime
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Station {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String   @unique
+  name      String
+  frequency String
+  genre     String
+  city      String
+  streamUrl String
+  coverFrom String   @default("#7C3AED")
+  coverTo   String   @default("#EC4899")
+  listeners Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  favorites Favorite[]
+  history   ListeningHistory[]
+
+  @@index([genre])
+}
+
+model Song {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String   @unique
+  title     String
+  artist    String
+  album     String   @default("Single")
+  genre     String   @default("Pop")
+  duration  Int // seconds
+  audioUrl  String
+  /// Uploaded cover image (served from /api/media/...). Falls back to the generated gradient.
+  coverUrl  String?
+  coverFrom String   @default("#7C3AED")
+  coverTo   String   @default("#EC4899")
+  /// Counted plays (>= PLAY_COUNT_SECONDS listened), guests included.
+  plays     Int      @default(0)
+  /// Admin who uploaded the track (null for seeded catalog songs).
+  uploadedById String? @db.ObjectId
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  playlistEntries PlaylistSong[]
+  favorites       Favorite[]
+  history         ListeningHistory[]
+
+  @@index([artist])
+  @@index([genre])
+  @@index([isActive, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Library
+// ---------------------------------------------------------------------------
+
+model Playlist {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  name        String
+  description String?
+  coverFrom   String   @default("#7C3AED")
+  coverTo     String   @default("#EC4899")
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  songs PlaylistSong[]
+
+  @@index([userId])
+}
+
+model PlaylistSong {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  playlistId String   @db.ObjectId
+  songId     String   @db.ObjectId
+  position   Int
+  addedAt    DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  song     Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, songId])
+  @@index([playlistId, position])
+}
+
+/// A liked song or a favourite station. `targetId` mirrors songId/stationId so a
+/// single unique index works (MongoDB unique indexes treat missing fields as equal).
+model Favorite {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String       @db.ObjectId
+  type      FavoriteType
+  targetId  String       @db.ObjectId
+  songId    String?      @db.ObjectId
+  stationId String?      @db.ObjectId
+  createdAt DateTime     @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song    Song?    @relation(fields: [songId], references: [id], onDelete: Cascade)
+  station Station? @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, targetId])
+  @@index([userId, createdAt])
+}
+
+model ListeningHistory {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String   @db.ObjectId
+  songId          String?  @db.ObjectId
+  stationId       String?  @db.ObjectId
+  secondsListened Int      @default(0)
+  playedAt        DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song    Song?    @relation(fields: [songId], references: [id], onDelete: Cascade)
+  station Station? @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@index([userId, playedAt])
+  @@index([playedAt])
+  @@index([songId])
+}
+
+// ---------------------------------------------------------------------------
+// Billing (created once a Stripe customer exists; no record = Free plan)
+// ---------------------------------------------------------------------------
+
+model Subscription {
+  id                   String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId               String             @unique @db.ObjectId
+  plan                 Plan               @default(FREE)
+  status               SubscriptionStatus @default(INCOMPLETE)
+  interval             BillingInterval?
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stripeSubscriptionId])
+  @@index([status])
+}
