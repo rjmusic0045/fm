@@ -68,6 +68,16 @@ jobs:
           cp -r node_modules/.prisma/client .next/standalone/node_modules/.prisma/
           ls .next/standalone/node_modules/.prisma/client | grep -q 'debian-openssl-3.0.x' \
             || { echo "::error::Prisma Linux engine missing"; exit 1; }
+          # Azure runs `npm start` when no Startup Command is set: point it at the
+          # standalone server, and drop build/postinstall scripts Azure must not run.
+          node -e '
+            const f = ".next/standalone/package.json";
+            const p = require("./" + f);
+            p.scripts = { start: "node server.js" };
+            delete p.prisma;
+            require("fs").writeFileSync(f, JSON.stringify(p, null, 2));
+          '
+          grep -q '"start": "node server.js"' .next/standalone/package.json
           # Never ship secrets or local data.
           rm -f .next/standalone/.env .next/standalone/.env.*
           rm -rf .next/standalone/storage
