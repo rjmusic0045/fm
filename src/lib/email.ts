@@ -33,7 +33,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
     return;
   }
   await transport.sendMail({
-    from: process.env.EMAIL_FROM ?? `${siteConfig.name} <no-reply@lumen.fm>`,
+    from: process.env.EMAIL_FROM?.trim() || `${siteConfig.name} <no-reply@lumen.fm>`,
     to,
     subject,
     html,
@@ -41,7 +41,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailInput) {
   });
 }
 
-export const appUrl = () => (process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+export const appUrl = () => (process.env.NEXTAUTH_URL?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000").replace(/\/$/, "");
 
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);

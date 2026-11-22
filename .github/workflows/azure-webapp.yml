@@ -52,7 +52,7 @@ jobs:
         run: npm run build
         env:
           # NEXT_PUBLIC_* values are baked into the browser bundle at build time.
-          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://ganesh-fm-a4b6a2hpc4gwg3g8.southindia-01.azurewebsites.net' }}
           NEXT_TELEMETRY_DISABLED: "1"
 
       - name: Assemble standalone package

@@ -4,7 +4,8 @@ export const siteConfig = {
   tagline: "Your City. Your Sound. Live.",
   description:
     "Lumen FM is a premium live FM radio and music streaming platform. Tune into live stations, discover new music and listen ad-free in HD.",
-  url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  // `||` (not `??`): CI passes unset variables as empty strings, and new URL("") throws.
+  url: process.env.NEXT_PUBLIC_APP_URL?.trim() || "http://localhost:3000",
   nav: [
     { label: "Home", href: "/" },
     { label: "Stations", href: "/#stations" },
