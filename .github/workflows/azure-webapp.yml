@@ -85,6 +85,20 @@ jobs:
     needs: build
     timeout-minutes: 15
     steps:
+      - name: Check deploy credentials
+        env:
+          PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        run: |
+          if [ -z "$PUBLISH_PROFILE" ]; then
+            echo "::error::Repository secret AZURE_WEBAPP_PUBLISH_PROFILE is missing or empty. Add it under GitHub repo Settings > Secrets and variables > Actions > Secrets tab > New repository secret (exact name, value = full publish profile XML from Azure portal > ganesh-fm > Overview > Download publish profile)."
+            exit 1
+          fi
+          if ! printf '%s' "$PUBLISH_PROFILE" | grep -q '<publishData'; then
+            echo "::error::AZURE_WEBAPP_PUBLISH_PROFILE does not look like a publish profile. Paste the whole contents of the downloaded .PublishSettings file, starting with <publishData>."
+            exit 1
+          fi
+          echo "Publish profile secret found."
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
