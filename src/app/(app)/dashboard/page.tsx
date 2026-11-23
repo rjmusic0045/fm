@@ -61,6 +61,9 @@ export default async function DashboardPage() {
           <Button asChild variant={user.role === "ADMIN" ? "outline" : "gradient"}>
             <Link href="/music">Listen to music</Link>
           </Button>
+          <Button asChild variant="outline">
+            <Link href="/settings">Settings</Link>
+          </Button>
           <SignOutButton />
         </div>
       </GlassCard>

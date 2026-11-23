@@ -66,24 +66,28 @@ enum FavoriteType {
 // ---------------------------------------------------------------------------
 
 model User {
-  id              String       @id @default(auto()) @map("_id") @db.ObjectId
-  name            String?
-  email           String       @unique
-  emailVerified   DateTime?
-  image           String?
-  passwordHash    String?
-  role            Role         @default(USER)
-  onboarded       Boolean      @default(false)
-  favoriteGenres  String[]     @default([])
-  audioQuality    AudioQuality @default(NORMAL)
-  theme           String       @default("dark")
-  lastLoginAt     DateTime?
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  name               String?
+  email              String       @unique
+  emailVerified      DateTime?
+  image              String?
+  passwordHash       String?
+  role               Role         @default(USER)
+  onboarded          Boolean      @default(false)
+  favoriteGenres     String[]     @default([])
+  /// Preferred content languages chosen at onboarding / in settings.
+  preferredLanguages String[]     @default([])
+  /// Deactivated by an admin: cannot sign in; existing sessions end within a minute.
+  disabled           Boolean      @default(false)
+  audioQuality       AudioQuality @default(NORMAL)
+  theme              String       @default("dark")
+  lastLoginAt        DateTime?
   /// Id of the one device session allowed to use this account (duplicate-login control).
-  activeSessionId String?
+  activeSessionId    String?
   /// Last time the active session was seen (used to decide if another login is a duplicate).
-  lastSeenAt      DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  lastSeenAt         DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   accounts            Account[]
   sessions            Session[]

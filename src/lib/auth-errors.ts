@@ -7,6 +7,8 @@ export const AUTH_ERRORS = {
   INVALID_INPUT: "INVALID_INPUT",
   /** Correct password, but the account is active on another device (resubmit with force to take over). */
   ALREADY_SIGNED_IN: "ALREADY_SIGNED_IN",
+  /** Deactivated by an admin. */
+  ACCOUNT_DISABLED: "ACCOUNT_DISABLED",
 } as const;
 
 export type AuthErrorCode = (typeof AUTH_ERRORS)[keyof typeof AUTH_ERRORS] | "BACKEND_UNAVAILABLE" | "UNKNOWN";
@@ -18,6 +20,7 @@ export const authErrorMessages: Record<AuthErrorCode, string> = {
   RATE_LIMITED: "Too many attempts. Please wait a few minutes and try again.",
   INVALID_INPUT: "Please check your email and password.",
   ALREADY_SIGNED_IN: "This account is already signed in on another device.",
+  ACCOUNT_DISABLED: "This account has been deactivated. Contact support if you think this is a mistake.",
   BACKEND_UNAVAILABLE: "Sign-in is temporarily unavailable. Please try again shortly.",
   UNKNOWN: "Something went wrong. Please try again.",
 };

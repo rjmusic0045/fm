@@ -80,6 +80,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         await resetRateLimit(`login:email:${email}`);
+        if (user.disabled) throw new Error(AUTH_ERRORS.ACCOUNT_DISABLED);
 
         // Duplicate-login control: one active device per account. If another
         // session was active recently, ask before taking over.
@@ -105,6 +106,10 @@ export const authOptions: NextAuthOptions = {
     async signIn({ user, account }) {
       // Our schema requires an email (also needed for account recovery).
       if (account?.provider === "facebook" && !user.email) return "/login?error=EmailRequired";
+      if (user.id) {
+        const existing = await prisma.user.findUnique({ where: { id: user.id }, select: { disabled: true } }).catch(() => null);
+        if (existing?.disabled) return "/login?error=AccountDisabled";
+      }
       return true;
     },
 
@@ -126,9 +131,9 @@ export const authOptions: NextAuthOptions = {
         } else if (Date.now() - (token.sidCheckedAt ?? 0) > SESSION_RECHECK_MS) {
           const current = await prisma.user.findUnique({
             where: { id: token.id },
-            select: { activeSessionId: true, lastSeenAt: true },
+            select: { activeSessionId: true, lastSeenAt: true, disabled: true },
           });
-          if (!current || current.activeSessionId !== token.sid) {
+          if (!current || current.disabled || current.activeSessionId !== token.sid) {
             // Signed in on another device since: end this session and say why.
             return { sessionExpiresAt: token.sessionExpiresAt, revoked: true };
           }

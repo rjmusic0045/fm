@@ -20,6 +20,8 @@ export default async function AdminUsersPage() {
       lastLoginAt: true,
       activeSessionId: true,
       lastSeenAt: true,
+      disabled: true,
+      emailVerified: true,
       subscription: { select: { plan: true, status: true, currentPeriodEnd: true, stripeCustomerId: true } },
     },
   });
@@ -44,11 +46,13 @@ export default async function AdminUsersPage() {
             role: u.role,
             createdAt: u.createdAt.toISOString(),
             lastLoginAt: u.lastLoginAt?.toISOString() ?? null,
-            online: Boolean(u.activeSessionId && u.lastSeenAt && now - u.lastSeenAt.getTime() < ACTIVE_SESSION_WINDOW_MS),
+            online: !u.disabled && Boolean(u.activeSessionId && u.lastSeenAt && now - u.lastSeenAt.getTime() < ACTIVE_SESSION_WINDOW_MS),
             plan: s?.plan ?? "FREE",
             planState: !paid ? "none" : active ? "active" : "expired",
             periodEnd: s?.currentPeriodEnd?.toISOString() ?? null,
             manual: Boolean(s?.stripeCustomerId.startsWith("manual:")),
+            disabled: u.disabled,
+            emailVerified: Boolean(u.emailVerified),
           };
         })}
       />

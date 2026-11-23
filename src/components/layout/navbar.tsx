@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { signOut } from "next-auth/react";
 import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { UserMenu, accountLinks } from "@/components/layout/user-menu";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
@@ -16,16 +18,20 @@ function AuthButtons({ signedIn, mobile = false }: { signedIn: boolean; mobile?:
   if (signedIn) {
     return (
       <>
-        <Button variant={mobile ? "glass" : "ghost"} size={mobile ? "md" : "sm"} onClick={() => signOut({ callbackUrl: "/" })}>
-          <LogOut />
-          Sign out
-        </Button>
+        {mobile ? (
+          <Button variant="glass" size="md" onClick={() => signOut({ callbackUrl: "/" })}>
+            <LogOut />
+            Sign out
+          </Button>
+        ) : null}
         <Button asChild variant="gradient" size={mobile ? "md" : "sm"}>
           <Link href="/dashboard">
             <LayoutDashboard />
             Dashboard
           </Link>
         </Button>
+        {/* Avatar menu: Settings, Admin (admins), Sign out */}
+        {!mobile && <UserMenu />}
       </>
     );
   }
@@ -38,6 +44,27 @@ function AuthButtons({ signedIn, mobile = false }: { signedIn: boolean; mobile?:
         <Link href="/signup">Get Started</Link>
       </Button>
     </>
+  );
+}
+
+function MobileAccountLinks({ onNavigate }: { onNavigate: () => void }) {
+  const { data } = useSession();
+  // Dashboard already has its own button below.
+  const links = accountLinks(data?.user?.role === "ADMIN").filter((l) => l.href !== "/dashboard");
+  return (
+    <ul className="mt-2 border-t border-foreground/10 pt-2">
+      {links.map(({ href, label, icon: Icon }) => (
+        <li key={href}>
+          <Link
+            href={href}
+            onClick={onNavigate}
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-base font-medium text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
+          >
+            <Icon className="size-4" aria-hidden /> {label}
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -146,6 +173,7 @@ export function Navbar() {
                 </motion.li>
               ))}
             </ul>
+            {signedIn && <MobileAccountLinks onNavigate={() => setOpen(false)} />}
             <div className="mt-2 grid grid-cols-2 gap-2 border-t border-foreground/10 pt-3">
               <AuthButtons signedIn={signedIn} mobile />
             </div>

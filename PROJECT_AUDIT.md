@@ -158,7 +158,7 @@ The global player is mounted once in the root layout: `AudioEngine` holds a sing
 
 - Current look: **light and minimal** (white surfaces, zinc neutrals, one indigo accent). This was explicitly requested on 20 Nov, replacing the earlier neon dark theme.
 - Exception: the auth pages keep a dark "lamp" scene (scoped `.theme-dark`).
-- Marketing pages use a top navbar. **The navbar isn't session-aware:** it always shows Sign In / Get Started.
+- Marketing pages use a top navbar. It's session-aware (`useIsSignedIn`): Sign out and Dashboard when signed in. *Correction:* the first version of this audit wrongly said it wasn't. Phase B added an avatar menu with Settings and Admin.
 - Admin: a header with section tabs (working tree), plus tables, cards and dialog forms.
 - Missing: a user app shell (sidebar, library), a search UI, consistent loading and error states (`loading.tsx` / `error.tsx`).
 

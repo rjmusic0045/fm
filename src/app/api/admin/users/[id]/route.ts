@@ -15,6 +15,9 @@ const bodySchema = z.discriminatedUnion("action", [
   /** Sign the user out of every device. */
   z.object({ action: z.literal("signout") }),
   z.object({ action: z.literal("role"), role: z.enum(["USER", "ADMIN"]) }),
+  /** Deactivate (blocks sign-in, ends sessions) or reactivate an account. */
+  z.object({ action: z.literal("disable") }),
+  z.object({ action: z.literal("enable") }),
 ]);
 
 /**
@@ -67,6 +70,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       break;
     case "signout":
       await prisma.user.update({ where: { id: user.id }, data: { activeSessionId: null, lastSeenAt: null } });
+      break;
+    case "disable":
+      if (user.id === admin.user.id) return jsonError(400, "INVALID_INPUT", "You can't deactivate your own account.");
+      await prisma.user.update({ where: { id: user.id }, data: { disabled: true, activeSessionId: null, lastSeenAt: null } });
+      break;
+    case "enable":
+      await prisma.user.update({ where: { id: user.id }, data: { disabled: false } });
       break;
     case "role":
       if (user.id === admin.user.id && body.role !== "ADMIN") {

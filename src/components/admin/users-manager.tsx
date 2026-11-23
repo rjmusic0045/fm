@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Crown, LogOut, MoreHorizontal, ShieldCheck } from "lucide-react";
+import { Ban, CheckCircle2, Crown, LogOut, MoreHorizontal, ShieldCheck } from "lucide-react";
 import { FormError, inputClass, useAdminAction } from "@/components/admin/kit";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,8 @@ export interface UserRow {
   planState: "none" | "active" | "expired";
   periodEnd: string | null;
   manual: boolean;
+  disabled: boolean;
+  emailVerified: boolean;
 }
 
 const fmt = (iso: string | null) =>
@@ -89,6 +91,19 @@ function Actions({ u, onError }: { u: UserRow; onError: (e: string | null) => vo
           >
             <ShieldCheck className="mr-1.5 inline size-3.5" aria-hidden /> {u.role === "ADMIN" ? "Remove admin role" : "Make admin"}
           </button>
+          {u.disabled ? (
+            <button role="menuitem" className={item} onClick={() => act({ action: "enable" })}>
+              <CheckCircle2 className="mr-1.5 inline size-3.5" aria-hidden /> Reactivate account
+            </button>
+          ) : (
+            <button
+              role="menuitem"
+              className={cn(item, "text-red-600")}
+              onClick={() => act({ action: "disable" }, `Deactivate ${u.email}? They can't sign in and are signed out within a minute.`)}
+            >
+              <Ban className="mr-1.5 inline size-3.5" aria-hidden /> Deactivate account
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -97,7 +112,7 @@ function Actions({ u, onError }: { u: UserRow; onError: (e: string | null) => vo
 
 export function UsersManager({ users }: { users: UserRow[] }) {
   const [q, setQ] = React.useState("");
-  const [filter, setFilter] = React.useState<"all" | "active" | "expired" | "free" | "online">("all");
+  const [filter, setFilter] = React.useState<"all" | "active" | "expired" | "free" | "online" | "disabled">("all");
   const [error, setError] = React.useState<string | null>(null);
 
   const shown = users.filter((u) => {
@@ -106,6 +121,7 @@ export function UsersManager({ users }: { users: UserRow[] }) {
     if (filter === "expired") return u.planState === "expired";
     if (filter === "free") return u.planState === "none";
     if (filter === "online") return u.online;
+    if (filter === "disabled") return u.disabled;
     return true;
   });
 
@@ -113,7 +129,7 @@ export function UsersManager({ users }: { users: UserRow[] }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name or email" aria-label="Search users" className={cn(inputClass, "max-w-xs")} />
-        {(["all", "active", "expired", "free", "online"] as const).map((f) => (
+        {(["all", "active", "expired", "free", "online", "disabled"] as const).map((f) => (
           <button
             key={f}
             type="button"
@@ -121,7 +137,7 @@ export function UsersManager({ users }: { users: UserRow[] }) {
             aria-pressed={filter === f}
             className={cn("rounded-full px-3 py-1 text-sm", filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground")}
           >
-            {{ all: "All", active: "Paid", expired: "Expired", free: "Free", online: "Online now" }[f]}
+            {{ all: "All", active: "Paid", expired: "Expired", free: "Free", online: "Online now", disabled: "Deactivated" }[f]}
           </button>
         ))}
       </div>
@@ -142,8 +158,14 @@ export function UsersManager({ users }: { users: UserRow[] }) {
             {shown.map((u) => (
               <tr key={u.id} className="border-t border-border">
                 <td className="py-2 pl-4 pr-2">
-                  <p className="font-medium">{u.name ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground">{u.email}</p>
+                  <p className="flex items-center gap-1.5 font-medium">
+                    {u.name ?? "—"}
+                    {u.disabled && <span className="rounded-full bg-red-50 px-1.5 text-[10px] font-semibold text-red-700 ring-1 ring-inset ring-red-200">DEACTIVATED</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {u.email}
+                    {!u.emailVerified && <span className="ml-1 text-amber-600">· unverified</span>}
+                  </p>
                 </td>
                 <td className="px-2">
                   {u.role === "ADMIN" ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">Admin</span> : "User"}

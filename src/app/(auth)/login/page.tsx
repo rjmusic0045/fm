@@ -14,6 +14,7 @@ const errorMessages: Record<string, string> = {
   AccessDenied: "Access was denied. Please try again.",
   CredentialsSignin: "Incorrect email or password.",
   SessionRequired: "Please sign in to continue.",
+  AccountDisabled: "This account has been deactivated. Contact support if you think this is a mistake.",
   EmailRequired: "Facebook didn't share an email address. Allow email access or sign up with email instead.",
   OAuthSignin: "Couldn't start Facebook sign-in. Please try again.",
   OAuthCallback: "Facebook sign-in was interrupted. Please try again.",
