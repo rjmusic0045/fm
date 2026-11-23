@@ -8,13 +8,14 @@ import { prisma } from "@/lib/prisma";
 import { clientIp, rateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { burnPasswordCheck, verifyPassword } from "@/lib/tokens";
 import { loginSchema } from "@/lib/validations/auth";
+import { authSecret } from "@/lib/auth-secret";
 import { AUTH_ERRORS, SESSION_REMEMBER_SECONDS, SESSION_SHORT_SECONDS } from "@/lib/auth-errors";
 
 export const facebookEnabled = Boolean(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET);
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: authSecret(),
   // Credentials sign-in requires JWT sessions in NextAuth v4.
   session: { strategy: "jwt", maxAge: SESSION_REMEMBER_SECONDS },
   pages: {

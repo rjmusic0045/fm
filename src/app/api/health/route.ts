@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { storageBackend } from "@/lib/storage";
+import { authSecretSource } from "@/lib/auth-secret";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,14 +36,22 @@ export async function GET(req: Request) {
     }
   }
 
-  const checks = {
-    NEXTAUTH_SECRET: Boolean(process.env.NEXTAUTH_SECRET?.trim()),
+  const secretSource = authSecretSource();
+  const checks: Record<string, unknown> = {
+    NEXTAUTH_SECRET: Boolean(secretSource),
+    ...(secretSource && secretSource !== "NEXTAUTH_SECRET" ? { NEXTAUTH_SECRET_from: secretSource } : {}),
     NEXTAUTH_URL: urlOk,
     NEXTAUTH_URL_matches_site: urlMatchesHost,
     DATABASE_URL: Boolean(process.env.DATABASE_URL?.trim()),
     database,
     storage: storageBackend(),
   };
-  const healthy = checks.NEXTAUTH_SECRET && checks.NEXTAUTH_URL && database === "ok";
+  if (!secretSource) {
+    // Help spot typos: NAMES ONLY of settings that look auth/secret related. Never values.
+    checks.similar_setting_names = Object.keys(process.env)
+      .filter((k) => /secret|nextauth|auth/i.test(k) && !/^(PATH|HOME)$/i.test(k))
+      .sort();
+  }
+  const healthy = Boolean(secretSource) && urlOk && database === "ok";
   return Response.json({ ok: healthy, checks }, { status: healthy ? 200 : 503, headers: { "Cache-Control": "no-store" } });
 }

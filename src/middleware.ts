@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { authSecret } from "@/lib/auth-secret";
 
 /** Pages that require a signed-in user. */
 const PROTECTED = ["/dashboard", "/onboarding", "/settings", "/library", "/billing", "/admin"];
@@ -11,7 +12,7 @@ const matches = (path: string, prefixes: string[]) =>
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req, secret: authSecret() });
   const signedIn = Boolean(token?.id && (!token.sessionExpiresAt || token.sessionExpiresAt > Date.now()));
 
   if (matches(pathname, PROTECTED) && !signedIn) {
