@@ -1,85 +1,66 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { Headphones, Heart, Music2, Users } from "lucide-react";
-import { getAdminSession } from "@/lib/admin";
+import { Disc3, Headphones, Heart, Mic2, Music2, Podcast, Users } from "lucide-react";
 import { listSongs } from "@/lib/songs";
 import { prisma } from "@/lib/prisma";
 import { PLAY_COUNT_SECONDS } from "@/lib/player-constants";
-import { Logo } from "@/components/brand/logo";
-import { SignOutButton } from "@/components/auth/sign-out-button";
 import { UploadForm } from "@/components/admin/upload-form";
 import { SongsTable } from "@/components/admin/songs-table";
-import { MiniPlayer, PlayerSpacer } from "@/components/player/mini-player";
+import { PageHeader } from "@/components/admin/kit";
 
-export const metadata: Metadata = { title: "Admin" };
+export const metadata: Metadata = { title: "Admin · Songs" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
-  // Middleware already gates /admin; this re-checks the role against the DB.
-  const session = await getAdminSession();
-  if (!session) redirect("/login?callbackUrl=/admin");
-
-  const [songs, uniqueListeners] = await Promise.all([
+export default async function AdminSongsPage() {
+  const [songs, uniqueListeners, artists, albums, podcastCount, episodePlays, activeSubs] = await Promise.all([
     listSongs({ includeInactive: true }),
-    prisma.listeningHistory.groupBy({ by: ["userId"], where: { songId: { not: null } } }).then((r) => r.length),
+    prisma.listeningHistory.groupBy({ by: ["userId"] }).then((r) => r.length),
+    prisma.artist.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.album.findMany({ orderBy: { title: "asc" }, select: { id: true, title: true } }),
+    prisma.podcast.count(),
+    prisma.podcastEpisode.aggregate({ _sum: { plays: true } }),
+    prisma.subscription.count({ where: { plan: { not: "FREE" }, status: { in: ["ACTIVE", "TRIALING"] }, currentPeriodEnd: { gt: new Date() } } }),
   ]);
 
   const stats = [
     { label: "Songs", value: songs.length, icon: Music2 },
-    { label: "Total plays", value: songs.reduce((n, s) => n + s.plays, 0), icon: Headphones },
+    { label: "Song plays", value: songs.reduce((n, s) => n + s.plays, 0), icon: Headphones },
     { label: "Unique listeners", value: uniqueListeners, icon: Users },
-    { label: "Total likes", value: songs.reduce((n, s) => n + s.likes, 0), icon: Heart },
+    { label: "Song likes", value: songs.reduce((n, s) => n + s.likes, 0), icon: Heart },
+    { label: "Artists", value: artists.length, icon: Mic2 },
+    { label: "Albums", value: albums.length, icon: Disc3 },
+    { label: "Podcasts", value: podcastCount, icon: Podcast },
+    { label: "Episode plays", value: episodePlays._sum.plays ?? 0, icon: Headphones },
+    { label: "Active paid plans", value: activeSubs, icon: Users },
   ];
+  const artistOptions = artists.map((a) => ({ id: a.id, name: a.name }));
+  const albumOptions = albums.map((a) => ({ id: a.id, name: a.title }));
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
-        <div className="container flex h-16 max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo />
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">Admin</span>
+      <PageHeader
+        title="Songs"
+        description={`A play counts after ${PLAY_COUNT_SECONDS}s of listening (guests included); listeners are unique signed-in users.`}
+      />
+
+      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {stats.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="glass rounded-xl p-4">
+            <dt className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Icon className="size-4" aria-hidden /> {label}
+            </dt>
+            <dd className="mt-1 text-2xl font-semibold tabular-nums">{value.toLocaleString("en-IN")}</dd>
           </div>
-          <nav className="flex items-center gap-1 text-sm">
-            <Link href="/music" className="rounded-full px-3 py-1.5 text-muted-foreground hover:bg-muted hover:text-foreground">
-              Listener view
-            </Link>
-            <SignOutButton size="sm" variant="ghost" />
-          </nav>
-        </div>
-      </header>
+        ))}
+      </dl>
 
-      <main id="main" className="container max-w-6xl space-y-8 py-8">
-        <div>
-          <h1 className="text-3xl font-semibold">Music library</h1>
-          <p className="mt-1 text-muted-foreground">
-            Signed in as {session.user.email}. A play counts after {PLAY_COUNT_SECONDS}s of listening (guests included);
-            listeners are unique signed-in users.
-          </p>
-        </div>
+      <UploadForm artists={artistOptions} albums={albumOptions} />
 
-        <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {stats.map(({ label, value, icon: Icon }) => (
-            <div key={label} className="glass rounded-xl p-4">
-              <dt className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Icon className="size-4" aria-hidden /> {label}
-              </dt>
-              <dd className="mt-1 text-2xl font-semibold tabular-nums">{value.toLocaleString("en-IN")}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <UploadForm />
-
-        <section aria-labelledby="songs-heading" className="space-y-3">
-          <h2 id="songs-heading" className="font-sans text-lg font-semibold">
-            All songs
-          </h2>
-          <SongsTable songs={songs} />
-        </section>
-      </main>
-      <PlayerSpacer />
-      <MiniPlayer />
+      <section aria-labelledby="songs-heading" className="space-y-3">
+        <h2 id="songs-heading" className="font-sans text-lg font-semibold">
+          All songs
+        </h2>
+        <SongsTable songs={songs} artists={artistOptions} albums={albumOptions} />
+      </section>
     </>
   );
 }

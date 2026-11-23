@@ -13,6 +13,8 @@ export async function signInWithCredentials(input: {
   password: string;
   remember: boolean;
   callbackUrl?: string;
+  /** Sign out the other device that is using this account. */
+  force?: boolean;
 }): Promise<AuthResult> {
   try {
     const res = await signIn("credentials", {
@@ -20,6 +22,7 @@ export async function signInWithCredentials(input: {
       email: input.email,
       password: input.password,
       remember: String(input.remember),
+      force: String(Boolean(input.force)),
       callbackUrl: input.callbackUrl ?? "/dashboard",
     });
     if (!res) return { ok: false, code: "UNKNOWN", message: authErrorMessages.UNKNOWN };

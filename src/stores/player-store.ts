@@ -20,6 +20,10 @@ export interface PlayableItem {
   image?: string;
   /** Database song id: when set, plays are reported to /api/songs/:id/play. */
   trackId?: string;
+  /** Database podcast episode id: plays are reported to /api/episodes/:id/play. */
+  episodeId?: string;
+  /** PREMIUM item: listeners without an active plan only get a preview. */
+  premium?: boolean;
 }
 
 export const songToItem = (s: Song): PlayableItem => ({
@@ -53,7 +57,11 @@ interface PlayerState {
   /** Seconds heard of the current item (used for the guest preview limit). */
   previewElapsed: number;
   isGuest: boolean;
+  /** Active subscription (or admin): PREMIUM items play in full. */
+  canPlayPremium: boolean;
   gateOpen: boolean;
+  /** Why the preview gate opened. */
+  gateReason: "guest" | "premium";
   error: string | null;
 }
 
@@ -68,6 +76,7 @@ interface PlayerActions {
   setVolume: (v: number) => void;
   toggleMute: () => void;
   setGuest: (guest: boolean) => void;
+  setCanPlayPremium: (v: boolean) => void;
   closeGate: () => void;
   /** Internal: called by the audio engine. */
   _sync: (patch: Partial<PlayerState>) => void;
@@ -82,11 +91,19 @@ export const registerAudio = (el: HTMLAudioElement | null) => {
 };
 export const getAudio = () => audioEl;
 
+/** Whether the current item is preview-only for this listener, and why. */
+export function previewReason(s: Pick<PlayerState, "isGuest" | "canPlayPremium" | "queue" | "index">): "guest" | "premium" | null {
+  if (s.isGuest) return "guest";
+  if (s.queue[s.index]?.premium && !s.canPlayPremium) return "premium";
+  return null;
+}
+
 export const usePlayer = create<PlayerStore>((set, get) => {
   const blockedByGate = () => {
     const s = get();
-    if (s.isGuest && s.previewElapsed >= GUEST_PREVIEW_SECONDS) {
-      set({ gateOpen: true });
+    const reason = previewReason(s);
+    if (reason && s.previewElapsed >= GUEST_PREVIEW_SECONDS) {
+      set({ gateOpen: true, gateReason: reason });
       return true;
     }
     return false;
@@ -103,7 +120,9 @@ export const usePlayer = create<PlayerStore>((set, get) => {
     muted: false,
     previewElapsed: 0,
     isGuest: true,
+    canPlayPremium: false,
     gateOpen: false,
+    gateReason: "guest",
     error: null,
 
     playQueue: (items, startIndex = 0) => {
@@ -164,6 +183,7 @@ export const usePlayer = create<PlayerStore>((set, get) => {
     setVolume: (v) => set({ volume: Math.min(1, Math.max(0, v)), muted: v === 0 }),
     toggleMute: () => set((s) => ({ muted: !s.muted })),
     setGuest: (guest) => set({ isGuest: guest, gateOpen: guest ? get().gateOpen : false }),
+    setCanPlayPremium: (v) => set({ canPlayPremium: v, gateOpen: v && get().gateReason === "premium" ? false : get().gateOpen }),
     closeGate: () => set({ gateOpen: false }),
     _sync: (patch) => set(patch),
   };

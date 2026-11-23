@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { GUEST_PREVIEW_SECONDS, PLAY_COUNT_SECONDS, registerAudio, usePlayer, type PlayableItem } from "@/stores/player-store";
+import { GUEST_PREVIEW_SECONDS, PLAY_COUNT_SECONDS, previewReason, registerAudio, usePlayer, type PlayableItem } from "@/stores/player-store";
 
 const itemKey = (i?: PlayableItem) => (i ? `${i.kind}:${i.id}` : "");
 
 /** Fire-and-forget play report; keepalive lets it survive page navigation. */
-function reportPlay(trackId: string, seconds: number) {
-  void fetch(`/api/songs/${trackId}/play`, {
+function reportPlay(item: PlayableItem, seconds: number) {
+  const url = item.episodeId ? `/api/episodes/${item.episodeId}/play` : `/api/songs/${item.trackId}/play`;
+  void fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ seconds: Math.round(seconds) }),
@@ -37,10 +38,10 @@ export function AudioEngine({ isGuest = true }: { isGuest?: boolean }) {
     let counted = false;
     const maybeCount = (force = false) => {
       const cur = usePlayer.getState().queue[usePlayer.getState().index];
-      if (counted || !cur?.trackId) return;
+      if (counted || !(cur?.trackId || cur?.episodeId)) return;
       if (listened >= PLAY_COUNT_SECONDS || (force && listened >= 5)) {
         counted = true;
-        reportPlay(cur.trackId, listened);
+        reportPlay(cur, listened);
       }
     };
 
@@ -115,10 +116,12 @@ export function AudioEngine({ isGuest = true }: { isGuest?: boolean }) {
         listened += delta;
         maybeCount();
         patch.previewElapsed = state.previewElapsed + delta;
-        if (state.isGuest && patch.previewElapsed >= GUEST_PREVIEW_SECONDS) {
+        const reason = previewReason(state);
+        if (reason && patch.previewElapsed >= GUEST_PREVIEW_SECONDS) {
           el.pause();
           patch.isPlaying = false;
           patch.gateOpen = true;
+          patch.gateReason = reason;
         }
       }
       _sync(patch);

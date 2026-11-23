@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Lock, Mail, UserPlus } from "lucide-react";
+import { Lock, Mail, MonitorSmartphone, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FloatingInput } from "@/components/ui/floating-input";
@@ -30,6 +30,8 @@ export function LoginForm({ callbackUrl, initialError, facebookEnabled }: LoginF
   const [errors, setErrors] = React.useState<Partial<Record<Field, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(initialError ?? null);
   const [noAccountEmail, setNoAccountEmail] = React.useState<string | null>(null);
+  /** Password was right, but the account is active on another device: ask before taking over. */
+  const [confirmTakeover, setConfirmTakeover] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [fbLoading, setFbLoading] = React.useState(false);
 
@@ -43,6 +45,7 @@ export function LoginForm({ callbackUrl, initialError, facebookEnabled }: LoginF
     setValues(next);
     setFormError(null);
     setNoAccountEmail(null);
+    setConfirmTakeover(false);
     if (touched[field]) setErrors(validate(next));
   };
 
@@ -51,8 +54,8 @@ export function LoginForm({ callbackUrl, initialError, facebookEnabled }: LoginF
     setErrors(validate(values));
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (e: React.FormEvent | null, force = false) => {
+    e?.preventDefault();
     setTouched({ email: true, password: true });
     const errs = validate(values);
     setErrors(errs);
@@ -64,12 +67,14 @@ export function LoginForm({ callbackUrl, initialError, facebookEnabled }: LoginF
     setSubmitting(true);
     setFormError(null);
     setNoAccountEmail(null);
+    setConfirmTakeover(false);
     try {
       const res = await signInWithCredentials({
         email: values.email.trim().toLowerCase(),
         password: values.password,
         remember: values.remember,
         callbackUrl,
+        force,
       });
       if (res.ok) {
         await refreshSession();
@@ -79,6 +84,7 @@ export function LoginForm({ callbackUrl, initialError, facebookEnabled }: LoginF
         return;
       }
       if (res.code === "NO_ACCOUNT") setNoAccountEmail(values.email.trim().toLowerCase());
+      else if (res.code === "ALREADY_SIGNED_IN") setConfirmTakeover(true);
       else setFormError(res.message);
     } catch {
       setFormError("Something went wrong. Please try again.");
@@ -169,6 +175,27 @@ export function LoginForm({ callbackUrl, initialError, facebookEnabled }: LoginF
                     Create account with this email
                   </Link>
                 </Button>
+              </FormAlert>
+            </motion.div>
+          )}
+          {confirmTakeover && (
+            <motion.div key="takeover" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <FormAlert tone="info">
+                <p className="flex items-center gap-2 font-medium">
+                  <MonitorSmartphone className="size-4 shrink-0" aria-hidden />
+                  This account is already signed in on another device.
+                </p>
+                <p className="mt-1 text-amber-100/80">
+                  Only one device can use an account at a time. Continue here to sign the other device out.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button type="button" size="sm" loading={submitting} onClick={() => void onSubmit(null, true)}>
+                    Continue here
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setConfirmTakeover(false)}>
+                    Cancel
+                  </Button>
+                </div>
               </FormAlert>
             </motion.div>
           )}

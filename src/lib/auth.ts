@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import type { NextAuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -9,7 +10,13 @@ import { clientIp, rateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { burnPasswordCheck, verifyPassword } from "@/lib/tokens";
 import { loginSchema } from "@/lib/validations/auth";
 import { authSecret } from "@/lib/auth-secret";
-import { AUTH_ERRORS, SESSION_REMEMBER_SECONDS, SESSION_SHORT_SECONDS } from "@/lib/auth-errors";
+import {
+  ACTIVE_SESSION_WINDOW_MS,
+  AUTH_ERRORS,
+  SESSION_RECHECK_MS,
+  SESSION_REMEMBER_SECONDS,
+  SESSION_SHORT_SECONDS,
+} from "@/lib/auth-errors";
 
 export const facebookEnabled = Boolean(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET);
 
@@ -40,15 +47,17 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
         remember: { label: "Remember me", type: "text" },
+        force: { label: "Sign out other device", type: "text" },
       },
       async authorize(raw, req) {
         const parsed = loginSchema.safeParse({
           email: raw?.email,
           password: raw?.password,
           remember: raw?.remember !== "false",
+          force: raw?.force === "true",
         });
         if (!parsed.success) throw new Error(AUTH_ERRORS.INVALID_INPUT);
-        const { email, password, remember } = parsed.data;
+        const { email, password, remember, force } = parsed.data;
 
         const ip = clientIp((req?.headers ?? {}) as Record<string, string>);
         const [byIp, byEmail] = await Promise.all([
@@ -71,7 +80,16 @@ export const authOptions: NextAuthOptions = {
         }
 
         await resetRateLimit(`login:email:${email}`);
+
+        // Duplicate-login control: one active device per account. If another
+        // session was active recently, ask before taking over.
+        const otherActive =
+          user.activeSessionId && user.lastSeenAt && Date.now() - user.lastSeenAt.getTime() < ACTIVE_SESSION_WINDOW_MS;
+        if (otherActive && !force) throw new Error(AUTH_ERRORS.ALREADY_SIGNED_IN);
+        const sid = await startDeviceSession(user.id);
+
         return {
+          sid,
           id: user.id,
           name: user.name,
           email: user.email,
@@ -94,6 +112,31 @@ export const authOptions: NextAuthOptions = {
       // Past the remember-me window: drop the identity so every consumer sees a guest.
       if (!user && token.sessionExpiresAt && Date.now() > token.sessionExpiresAt) {
         return { sessionExpiresAt: token.sessionExpiresAt };
+      }
+      if (user) {
+        // Credentials sign-in already issued a device session; OAuth sign-in takes over here.
+        token.sid = user.sid ?? (await startDeviceSession(user.id));
+        token.sidCheckedAt = Date.now();
+        token.loginAt = Date.now();
+        delete token.revoked;
+      } else if (token.id) {
+        // Still the account's active device? Re-checked at most once a minute per token.
+        if (!token.sid) {
+          token.sid = await startDeviceSession(token.id); // tokens issued before this feature
+        } else if (Date.now() - (token.sidCheckedAt ?? 0) > SESSION_RECHECK_MS) {
+          const current = await prisma.user.findUnique({
+            where: { id: token.id },
+            select: { activeSessionId: true, lastSeenAt: true },
+          });
+          if (!current || current.activeSessionId !== token.sid) {
+            // Signed in on another device since: end this session and say why.
+            return { sessionExpiresAt: token.sessionExpiresAt, revoked: true };
+          }
+          token.sidCheckedAt = Date.now();
+          if (!current.lastSeenAt || Date.now() - current.lastSeenAt.getTime() > SESSION_RECHECK_MS) {
+            await prisma.user.update({ where: { id: token.id }, data: { lastSeenAt: new Date() } }).catch(() => undefined);
+          }
+        }
       }
       if (user) {
         token.id = user.id;
@@ -120,16 +163,34 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
+      // Expired or revoked (signed in elsewhere): NextAuth still fills user name/email
+      // from the old cookie, so return an identity-free session explicitly.
+      if (!token.id) {
+        return {
+          expires: token.sessionExpiresAt ? new Date(token.sessionExpiresAt).toISOString() : session.expires,
+          ...(token.revoked ? { revoked: true } : {}),
+        } as unknown as typeof session;
+      }
       if (session.user && token.id) {
         session.user.id = token.id;
         session.user.role = token.role ?? "USER";
         session.user.onboarded = token.onboarded ?? false;
       }
       if (token.sessionExpiresAt) session.expires = new Date(token.sessionExpiresAt).toISOString();
+      if (token.revoked) session.revoked = true;
+      if (token.loginAt) session.loginAt = token.loginAt;
       return session;
     },
   },
   events: {
+    async signOut({ token }) {
+      // Free the account for the next login without a "signed in elsewhere" prompt.
+      if (token?.id && token.sid) {
+        await prisma.user
+          .updateMany({ where: { id: token.id, activeSessionId: token.sid }, data: { activeSessionId: null, lastSeenAt: null } })
+          .catch(() => undefined);
+      }
+    },
     async signIn({ user }) {
       if (user.id) {
         await prisma.user
@@ -147,6 +208,13 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+/** Issues a new device session id and makes it the account's only active one. */
+async function startDeviceSession(userId: string): Promise<string> {
+  const sid = randomUUID();
+  await prisma.user.update({ where: { id: userId }, data: { activeSessionId: sid, lastSeenAt: new Date() } });
+  return sid;
+}
 
 /** Server-side session helper. Treats sessions past their remember-me expiry as signed out. */
 export async function getSession() {

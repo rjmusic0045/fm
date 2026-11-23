@@ -4,7 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { songStats } from "@/lib/admin";
 import type { SongDTO } from "@/lib/song-dto";
 
-export function toDTO(s: Song, extra: { likes: number; listeners: number; liked?: boolean }): SongDTO {
+export function toDTO(
+  s: Song & { albumRef?: { access: "FREE" | "PREMIUM" } | null },
+  extra: { likes: number; listeners: number; liked?: boolean },
+): SongDTO {
   return {
     id: s.id,
     title: s.title,
@@ -22,14 +25,26 @@ export function toDTO(s: Song, extra: { likes: number; listeners: number; liked?
     isActive: s.isActive,
     uploaded: Boolean(s.uploadedById),
     createdAt: s.createdAt.toISOString(),
+    access: s.access === "PREMIUM" || s.albumRef?.access === "PREMIUM" ? "PREMIUM" : "FREE",
+    ownAccess: s.access,
+    artistId: s.artistId,
+    albumId: s.albumId,
+    trackNumber: s.trackNumber,
   };
 }
 
 /** Songs with stats. `userId` marks which ones that user has liked. */
-export async function listSongs(opts: { includeInactive?: boolean; userId?: string } = {}): Promise<SongDTO[]> {
+export async function listSongs(
+  opts: { includeInactive?: boolean; userId?: string; artistId?: string; albumId?: string } = {},
+): Promise<SongDTO[]> {
   const songs = await prisma.song.findMany({
-    where: opts.includeInactive ? {} : { isActive: true },
-    orderBy: { createdAt: "desc" },
+    where: {
+      ...(opts.includeInactive ? {} : { isActive: true }),
+      ...(opts.artistId ? { artistId: opts.artistId } : {}),
+      ...(opts.albumId ? { albumId: opts.albumId } : {}),
+    },
+    orderBy: opts.albumId ? [{ trackNumber: "asc" }, { createdAt: "asc" }] : { createdAt: "desc" },
+    include: { albumRef: { select: { access: true } } },
   });
   const ids = songs.map((s) => s.id);
   const [stats, liked] = await Promise.all([

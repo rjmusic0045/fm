@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Headphones, Heart, Pause, Play } from "lucide-react";
+import { Crown, Headphones, Heart, Pause, Play } from "lucide-react";
 import { CoverArt } from "@/components/player/cover-art";
 import { Visualizer } from "@/components/audio/visualizer";
 import { dtoToItem, type SongDTO } from "@/lib/song-dto";
@@ -98,7 +98,14 @@ function SongRow({ song, index, queue, signedIn }: { song: SongDTO; index: numbe
         </button>
       </div>
       <div className="min-w-0 flex-1">
-        <p className={cn("truncate font-medium", active && "text-primary")}>{song.title}</p>
+        <p className={cn("flex items-center gap-1.5 font-medium", active && "text-primary")}>
+          <span className="truncate">{song.title}</span>
+          {song.access === "PREMIUM" && (
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-50 px-1.5 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200" title="Premium: preview only without a plan">
+              <Crown className="size-2.5" aria-hidden /> PREMIUM
+            </span>
+          )}
+        </p>
         <p className="truncate text-sm text-muted-foreground">
           {song.artist}
           <span className="hidden sm:inline"> · {song.album}</span>

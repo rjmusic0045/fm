@@ -22,6 +22,13 @@ export interface SongDTO {
   /** Uploaded by an admin (vs. seeded demo catalog). */
   uploaded: boolean;
   createdAt: string;
+  /** Effective access: PREMIUM if the song or its album is Premium. */
+  access: "FREE" | "PREMIUM";
+  /** The song's own setting (what admins edit). */
+  ownAccess: "FREE" | "PREMIUM";
+  artistId: string | null;
+  albumId: string | null;
+  trackNumber: number | null;
 }
 
 export const dtoToItem = (s: SongDTO): PlayableItem => ({
@@ -34,4 +41,5 @@ export const dtoToItem = (s: SongDTO): PlayableItem => ({
   duration: s.duration || undefined,
   image: s.coverUrl ?? undefined,
   trackId: s.id,
+  premium: s.access === "PREMIUM",
 });

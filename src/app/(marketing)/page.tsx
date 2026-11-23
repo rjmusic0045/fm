@@ -5,8 +5,13 @@ import { FeaturesSection } from "@/components/home/features-section";
 import { TestimonialsSection } from "@/components/home/testimonials-section";
 import { PricingTeaser } from "@/components/home/pricing-teaser";
 import { CtaSection } from "@/components/home/cta-section";
+import { getPlans } from "@/lib/plans";
 
-export default function HomePage() {
+// Plan prices are admin-editable: refresh the cached page at most once a minute.
+export const revalidate = 60;
+
+export default async function HomePage() {
+  const plans = await getPlans();
   return (
     <>
       <Hero />
@@ -14,7 +19,7 @@ export default function HomePage() {
       <SongsSection />
       <FeaturesSection />
       <TestimonialsSection />
-      <PricingTeaser />
+      <PricingTeaser plans={plans} />
       <CtaSection />
     </>
   );

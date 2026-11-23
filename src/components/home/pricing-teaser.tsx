@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { GlassCard } from "@/components/ui/glass-card";
 import { SectionHeading } from "@/components/layout/section-heading";
 import { Reveal } from "@/components/motion/reveal";
-import { plans } from "@/config/plans";
+import type { Plan } from "@/config/plans";
 import { cn } from "@/lib/utils";
 
-export function PricingTeaser() {
+export function PricingTeaser({ plans }: { plans: Plan[] }) {
   return (
     <section id="pricing" aria-labelledby="pricing-title" className="container scroll-mt-28 py-20">
       <SectionHeading

@@ -21,6 +21,8 @@ export const loginSchema = z.object({
   // Don't leak password policy on login: just require something.
   password: z.string().min(1, "Password is required").max(128),
   remember: z.boolean().default(true),
+  /** Take over from a session active on another device. */
+  force: z.boolean().default(false),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 

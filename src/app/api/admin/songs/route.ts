@@ -11,6 +11,7 @@ import {
   deleteUpload,
   saveUpload,
 } from "@/lib/storage";
+import { accessSchema, refField } from "@/lib/admin-forms";
 
 export const runtime = "nodejs";
 
@@ -20,6 +21,7 @@ const fieldsSchema = z.object({
   album: z.string().trim().max(120).optional().default(""),
   genre: z.string().trim().max(40).optional().default(""),
   duration: z.coerce.number().int().min(0).max(4 * 60 * 60).optional().default(0),
+  access: accessSchema.optional().default("FREE"),
 });
 
 const palettes: [string, string][] = [
@@ -59,6 +61,7 @@ export async function POST(req: Request) {
     album: form.get("album") ?? undefined,
     genre: form.get("genre") ?? undefined,
     duration: form.get("duration") ?? undefined,
+    access: form.get("access") || undefined,
   });
   if (!parsed.success) {
     return jsonError(400, "INVALID_INPUT", parsed.error.issues[0]?.message ?? "Check the form fields.");
@@ -78,7 +81,19 @@ export async function POST(req: Request) {
     if (cover.size > MAX_IMAGE_BYTES) return jsonError(413, "TOO_LARGE", "Cover image must be 5 MB or smaller.");
   }
 
-  const { title, artist, album, genre, duration } = parsed.data;
+  const { title, album, genre, duration, access } = parsed.data;
+  let { artist } = parsed.data;
+
+  // Optional links to managed artist/album records (their names win over typed text).
+  const artistId = refField(form, "artistId") ?? null;
+  const albumId = refField(form, "albumId") ?? null;
+  const [artistRow, albumRow] = await Promise.all([
+    artistId ? prisma.artist.findUnique({ where: { id: artistId }, select: { name: true } }) : null,
+    albumId ? prisma.album.findUnique({ where: { id: albumId }, select: { title: true, _count: { select: { songs: true } } } }) : null,
+  ]);
+  if (artistId && !artistRow) return jsonError(400, "INVALID_INPUT", "Choose an existing artist.");
+  if (albumId && !albumRow) return jsonError(400, "INVALID_INPUT", "Choose an existing album.");
+  if (artistRow) artist = artistRow.name;
   let audioUrl: string | undefined;
   let coverUrl: string | undefined;
   try {
@@ -91,7 +106,7 @@ export async function POST(req: Request) {
         slug: `${slugify(title)}-${randomBytes(3).toString("hex")}`,
         title,
         artist,
-        album: album || "Single",
+        album: albumRow?.title ?? (album || "Single"),
         genre: genre || "Pop",
         duration,
         audioUrl,
@@ -99,6 +114,10 @@ export async function POST(req: Request) {
         coverFrom,
         coverTo,
         uploadedById: session.user.id,
+        access,
+        artistId,
+        albumId,
+        trackNumber: albumRow ? albumRow._count.songs + 1 : null,
       },
     });
     return jsonOk({ song }, { status: 201 });

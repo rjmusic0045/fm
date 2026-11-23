@@ -50,6 +50,12 @@ enum BillingInterval {
   YEAR
 }
 
+/// Who can stream an item in full. PREMIUM items give non-subscribers a preview only.
+enum Access {
+  FREE
+  PREMIUM
+}
+
 enum FavoriteType {
   SONG
   STATION
@@ -60,20 +66,24 @@ enum FavoriteType {
 // ---------------------------------------------------------------------------
 
 model User {
-  id             String       @id @default(auto()) @map("_id") @db.ObjectId
-  name           String?
-  email          String       @unique
-  emailVerified  DateTime?
-  image          String?
-  passwordHash   String?
-  role           Role         @default(USER)
-  onboarded      Boolean      @default(false)
-  favoriteGenres String[]     @default([])
-  audioQuality   AudioQuality @default(NORMAL)
-  theme          String       @default("dark")
-  lastLoginAt    DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  name            String?
+  email           String       @unique
+  emailVerified   DateTime?
+  image           String?
+  passwordHash    String?
+  role            Role         @default(USER)
+  onboarded       Boolean      @default(false)
+  favoriteGenres  String[]     @default([])
+  audioQuality    AudioQuality @default(NORMAL)
+  theme           String       @default("dark")
+  lastLoginAt     DateTime?
+  /// Id of the one device session allowed to use this account (duplicate-login control).
+  activeSessionId String?
+  /// Last time the active session was seen (used to decide if another login is a duplicate).
+  lastSeenAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   accounts            Account[]
   sessions            Session[]
@@ -174,22 +184,30 @@ model Station {
 }
 
 model Song {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  slug      String   @unique
-  title     String
-  artist    String
-  album     String   @default("Single")
-  genre     String   @default("Pop")
-  duration  Int // seconds
-  audioUrl  String
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  slug         String  @unique
+  title        String
+  artist       String
+  album        String  @default("Single")
+  genre        String  @default("Pop")
+  duration     Int // seconds
+  audioUrl     String
   /// Uploaded cover image (served from /api/media/...). Falls back to the generated gradient.
-  coverUrl  String?
-  coverFrom String   @default("#7C3AED")
-  coverTo   String   @default("#EC4899")
+  coverUrl     String?
+  coverFrom    String  @default("#7C3AED")
+  coverTo      String  @default("#EC4899")
   /// Counted plays (>= PLAY_COUNT_SECONDS listened), guests included.
-  plays     Int      @default(0)
+  plays        Int     @default(0)
   /// Admin who uploaded the track (null for seeded catalog songs).
   uploadedById String? @db.ObjectId
+  access       Access  @default(FREE)
+  /// Optional links to managed entities (artist/album strings above stay as display names).
+  artistId     String? @db.ObjectId
+  albumId      String? @db.ObjectId
+  trackNumber  Int?
+
+  artistRef Artist?  @relation(fields: [artistId], references: [id])
+  albumRef  Album?   @relation(fields: [albumId], references: [id])
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -201,6 +219,106 @@ model Song {
   @@index([artist])
   @@index([genre])
   @@index([isActive, createdAt])
+  @@index([artistId])
+  @@index([albumId, trackNumber])
+}
+
+model Artist {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug      String   @unique
+  name      String
+  bio       String   @default("")
+  city      String   @default("")
+  imageUrl  String?
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  songs    Song[]
+  albums   Album[]
+  podcasts Podcast[]
+
+  @@index([name])
+}
+
+model Album {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String   @unique
+  title       String
+  description String   @default("")
+  genre       String   @default("Pop")
+  releaseYear Int?
+  coverUrl    String?
+  coverFrom   String   @default("#4F46E5")
+  coverTo     String   @default("#EC4899")
+  access      Access   @default(FREE)
+  isActive    Boolean  @default(true)
+  artistId    String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  artist Artist? @relation(fields: [artistId], references: [id])
+  songs  Song[]
+
+  @@index([isActive, createdAt])
+  @@index([artistId])
+}
+
+model Podcast {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String   @unique
+  title       String
+  host        String   @default("")
+  description String   @default("")
+  category    String   @default("Talk")
+  coverUrl    String?
+  coverFrom   String   @default("#0EA5E9")
+  coverTo     String   @default("#4F46E5")
+  access      Access   @default(FREE)
+  isActive    Boolean  @default(true)
+  artistId    String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  artist   Artist?          @relation(fields: [artistId], references: [id])
+  episodes PodcastEpisode[]
+
+  @@index([isActive, createdAt])
+}
+
+model PodcastEpisode {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  podcastId     String   @db.ObjectId
+  title         String
+  description   String   @default("")
+  episodeNumber Int
+  duration      Int      @default(0) // seconds
+  audioUrl      String
+  plays         Int      @default(0)
+  isActive      Boolean  @default(true)
+  publishedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  podcast Podcast            @relation(fields: [podcastId], references: [id], onDelete: Cascade)
+  history ListeningHistory[]
+
+  @@index([podcastId, episodeNumber])
+}
+
+/// Admin-editable subscription plans (prices shown on the Pricing page).
+model PlanConfig {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  plan        Plan     @unique
+  name        String
+  tagline     String   @default("")
+  priceInr    Float
+  priceUsd    Float
+  features    String[] @default([])
+  highlighted Boolean  @default(false)
+  cta         String   @default("Choose plan")
+  sortOrder   Int      @default(0)
+  updatedAt   DateTime @updatedAt
 }
 
 // ---------------------------------------------------------------------------
@@ -262,16 +380,19 @@ model ListeningHistory {
   userId          String   @db.ObjectId
   songId          String?  @db.ObjectId
   stationId       String?  @db.ObjectId
+  episodeId       String?  @db.ObjectId
   secondsListened Int      @default(0)
   playedAt        DateTime @default(now())
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  song    Song?    @relation(fields: [songId], references: [id], onDelete: Cascade)
-  station Station? @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song    Song?           @relation(fields: [songId], references: [id], onDelete: Cascade)
+  station Station?        @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  episode PodcastEpisode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 
   @@index([userId, playedAt])
   @@index([playedAt])
   @@index([songId])
+  @@index([episodeId])
 }
 
 // ---------------------------------------------------------------------------

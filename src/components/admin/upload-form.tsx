@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, ImagePlus, Music2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn, formatDuration } from "@/lib/utils";
+import { AccessSelect } from "@/components/admin/kit";
+
+export interface Option {
+  id: string;
+  name: string;
+}
 
 const GENRES = ["Pop", "Indie Pop", "Lo-fi", "Hip-Hop", "Electronic", "Rock", "Jazz", "Classical", "Ambient", "R&B", "Devotional", "Folk", "Talk & Music"];
 
@@ -29,7 +35,9 @@ function readDuration(file: File): Promise<number> {
   });
 }
 
-export function UploadForm() {
+export function UploadForm({ artists = [], albums = [] }: { artists?: Option[]; albums?: Option[] }) {
+  const [artistId, setArtistId] = React.useState("");
+  const [resetKey, setResetKey] = React.useState(0);
   const router = useRouter();
   const formRef = React.useRef<HTMLFormElement>(null);
   const [audio, setAudio] = React.useState<File | null>(null);
@@ -61,6 +69,8 @@ export function UploadForm() {
 
   const reset = () => {
     formRef.current?.reset();
+    setArtistId("");
+    setResetKey((k) => k + 1);
     setAudio(null);
     setDuration(0);
     onCover(null);
@@ -193,22 +203,39 @@ export function UploadForm() {
             </label>
             <label className="space-y-1.5 text-sm">
               <span className="font-medium">Artist *</span>
-              <input name="artist" required maxLength={120} className={inputClass} placeholder="Artist name" />
+              <select name="artistId" value={artistId} onChange={(e) => setArtistId(e.target.value)} className={inputClass}>
+                <option value="">Type a name instead…</option>
+                {artists.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+              {!artistId && <input name="artist" required maxLength={120} className={inputClass} placeholder="Artist name" />}
+              {artistId && <input type="hidden" name="artist" value={artists.find((a) => a.id === artistId)?.name ?? ""} />}
             </label>
             <label className="space-y-1.5 text-sm">
               <span className="font-medium">Album</span>
-              <input name="album" maxLength={120} className={inputClass} placeholder="Single" />
+              <select name="albumId" defaultValue="" className={inputClass}>
+                <option value="">Single (no album)</option>
+                {albums.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="space-y-1.5 text-sm">
               <span className="font-medium">Genre</span>
               <input name="genre" list="genres" maxLength={40} className={inputClass} placeholder="Pop" />
-              <datalist id="genres">
+              <datalist id="genres" key="genres">
                 {GENRES.map((g) => (
                   <option key={g} value={g} />
                 ))}
               </datalist>
             </label>
           </div>
+          <AccessSelect key={resetKey} />
         </div>
       </div>
 
