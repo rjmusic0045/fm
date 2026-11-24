@@ -149,3 +149,11 @@ export function publishFields(form: FormData): { isActive: boolean; publishAt: D
 
 export const isFieldError = (v: unknown): v is { error: string } =>
   typeof v === "object" && v !== null && !(v instanceof Date) && "error" in v;
+
+/** Short free-text field (location parts, names): trimmed, max length, "" -> null. */
+export function textField(form: FormData, name: string, max = 80): string | null | undefined | { error: string } {
+  const v = field(form, name);
+  if (v === undefined) return undefined;
+  if (v === "") return null;
+  return v.length > max ? { error: `${name} must be ${max} characters or fewer.` } : v;
+}

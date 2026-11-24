@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { LayoutDashboard, LogOut, Settings, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, LogOut, MessagesSquare, Settings, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const initials = (name?: string | null, email?: string | null) =>
@@ -17,6 +17,7 @@ export const initials = (name?: string | null, email?: string | null) =>
 export function accountLinks(isAdmin: boolean) {
   return [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/submissions", label: "My submissions", icon: MessagesSquare },
     { href: "/settings", label: "Settings", icon: Settings },
     ...(isAdmin ? [{ href: "/admin", label: "Admin panel", icon: ShieldCheck }] : []),
   ];

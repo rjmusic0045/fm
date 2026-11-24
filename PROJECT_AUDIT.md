@@ -229,3 +229,24 @@ Each phase ends with typecheck, lint and production build, end-to-end API tests,
 2. **Theme (§8):** keep the current light theme (default) or switch the user app to dark.
 3. **Free-tier rules (Phases G and I):** skip limit per hour, ad frequency, preview length for Premium items (currently 30 s).
 4. **Separate development database (§10.4):** recommended yes.
+
+---
+
+## 12. Addendum (24 Nov 2026): People & Voices
+
+**Plan change requested:** skip **D (Live Radio)** and **H (Payments)** for now. Build People & Voices next.
+**Decisions:** audio only (no video for now); location is free-text state, district and village.
+
+### Reused, not rebuilt
+Azure Blob storage and the `/api/media` streaming route; the release rule (`isActive` + `publishAt`, server-side); Free/Premium `Access`; the language list; the admin form kit; the global player and play counting; accounts, roles and deactivation.
+
+### Phases
+
+| Phase | Scope |
+|---|---|
+| **V1. People & Voices section** | `VoiceStory` model with 8 categories (Random Talks, Unknown Talks, Heart Talks, Youth Voice, Business Ideas, Village Voice, Local Talent, Struggles & Opportunities) and their topics. Admin create/edit/publish with audio, cover, speaker (or anonymous), language and location. Public `/voices` landing, category pages filtered by topic, language, state, district and village, and story pages. Featured stories and play counts. |
+| **V2. Submit Your Voice** | Signed-in users upload or record audio in the browser. They add a title, description, category, topic, language and optional location, and must accept the content terms and confirm ownership. Admin review queue: approve and publish, reject, or request changes. "My submissions" page and in-app notifications. |
+| **V3. Discover Talent** | Talent registration and profiles (display name, category, language, optional location, bio). Showcases built from approved submissions, auditions, featured/trending lists, search and filters. |
+| **V4. Struggles & Opportunities board** | Jobs, internships, scholarships, competitions, auditions, mentorship, collaborations and skill programmes, with deadlines and links. Opportunity notifications (in-app, plus email when SMTP is configured). |
+
+**Privacy (all phases):** Heart Talks and other sensitive stories can be published anonymously. Location is optional and never shown for anonymous stories. Submitters must give consent, and only approved content is public.

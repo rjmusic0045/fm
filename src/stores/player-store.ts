@@ -24,6 +24,8 @@ export interface PlayableItem {
   episodeId?: string;
   // PREMIUM item: listeners without an active plan only get a preview.
   premium?: boolean;
+  /** People & Voices story id: plays are reported to /api/voices/:id/play. */
+  voiceId?: string;
 }
 
 export const songToItem = (s: Song): PlayableItem => ({

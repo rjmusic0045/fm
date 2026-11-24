@@ -3,7 +3,7 @@ import { getToken } from "next-auth/jwt";
 import { authSecret } from "@/lib/auth-secret";
 
 // Pages that require a signed-in user.
-const PROTECTED = ["/dashboard", "/onboarding", "/settings", "/library", "/billing", "/admin"];
+const PROTECTED = ["/dashboard", "/onboarding", "/settings", "/library", "/billing", "/admin", "/submissions"];
 // Pages that only make sense for guests.
 const GUEST_ONLY = ["/login", "/signup"];
 
@@ -46,6 +46,7 @@ export const config = {
     "/library/:path*",
     "/billing/:path*",
     "/admin/:path*",
+    "/submissions/:path*",
     "/login",
     "/signup",
   ],

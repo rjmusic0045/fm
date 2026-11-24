@@ -440,3 +440,126 @@ model Subscription {
   @@index([stripeSubscriptionId])
   @@index([status])
 }
+
+// ---------------------------------------------------------------------------
+// People & Voices (audio stories). Categories/topics live in src/config/voices.ts.
+// ---------------------------------------------------------------------------
+
+enum VoiceCategory {
+  RANDOM_TALKS
+  UNKNOWN_TALKS
+  HEART_TALKS
+  YOUTH_VOICE
+  BUSINESS_IDEAS
+  VILLAGE_VOICE
+  LOCAL_TALENT
+  STRUGGLES_OPPORTUNITIES
+}
+
+model VoiceStory {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  slug          String        @unique
+  title         String
+  description   String        @default("")
+  category      VoiceCategory
+  /// One of the category's topics (config/voices.ts).
+  topic         String
+  language      String?
+  /// Free-text location (optional). Never shown publicly for anonymous stories.
+  state         String?
+  district      String?
+  village       String?
+  /// Speaker / storyteller display name.
+  speakerName   String        @default("")
+  /// Publish without the speaker's name or location.
+  anonymous     Boolean       @default(false)
+  audioUrl      String
+  duration      Int           @default(0) // seconds
+  coverUrl      String?
+  coverFrom     String        @default("#4F46E5")
+  coverTo       String        @default("#7C3AED")
+  access        Access        @default(FREE)
+  isActive      Boolean       @default(true)
+  publishAt     DateTime?
+  featured      Boolean       @default(false)
+  plays         Int           @default(0)
+  /// Set when the story came from a user submission (Phase V2).
+  submittedById String?       @db.ObjectId
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([category, createdAt])
+  @@index([featured, createdAt])
+  @@index([language])
+  @@index([state])
+}
+
+/// "Submit Your Voice": what the listener says they are sharing.
+enum SubmissionType {
+  PERSONAL_STORY
+  OPINION
+  SINGING
+  BUSINESS_IDEA
+  VILLAGE_STORY
+  LIFE_EXPERIENCE
+  QUESTION
+  YOUTH_DISCUSSION
+  OTHER
+}
+
+enum SubmissionStatus {
+  PENDING
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+}
+
+/// A listener's audio submission waiting for (or after) admin review.
+model VoiceSubmission {
+  id           String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String           @db.ObjectId
+  type         SubmissionType
+  title        String
+  description  String           @default("")
+  category     VoiceCategory
+  topic        String
+  language     String?
+  state        String?
+  district     String?
+  village      String?
+  /// Name to show if published (not the account name unless they choose it).
+  displayName  String           @default("")
+  anonymous    Boolean          @default(false)
+  /// Cleared (and the file deleted) when a submission is rejected.
+  audioUrl     String?
+  duration     Int              @default(0)
+  /// Recorded in the browser (vs. uploaded file).
+  recorded     Boolean          @default(false)
+  /// Consent: content terms accepted and ownership/permission confirmed, at this time.
+  consentAt    DateTime
+  status       SubmissionStatus @default(PENDING)
+  /// Message from the reviewer to the listener (required for reject / request changes).
+  reviewNote   String?
+  reviewedById String?          @db.ObjectId
+  reviewedAt   DateTime?
+  /// Published story created on approval.
+  storyId      String?          @db.ObjectId
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+/// In-app notifications (bell in the navbar).
+model Notification {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  title     String
+  body      String    @default("")
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}

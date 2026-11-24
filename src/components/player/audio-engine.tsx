@@ -7,7 +7,11 @@ const itemKey = (i?: PlayableItem) => (i ? `${i.kind}:${i.id}` : "");
 
 // Fire-and-forget play report; keepalive lets it survive page navigation.
 function reportPlay(item: PlayableItem, seconds: number) {
-  const url = item.episodeId ? `/api/episodes/${item.episodeId}/play` : `/api/songs/${item.trackId}/play`;
+  const url = item.voiceId
+    ? `/api/voices/${item.voiceId}/play`
+    : item.episodeId
+      ? `/api/episodes/${item.episodeId}/play`
+      : `/api/songs/${item.trackId}/play`;
   void fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -36,7 +40,7 @@ export function AudioEngine({ isGuest = true }: { isGuest?: boolean }) {
     let counted = false;
     const maybeCount = (force = false) => {
       const cur = usePlayer.getState().queue[usePlayer.getState().index];
-      if (counted || !(cur?.trackId || cur?.episodeId)) return;
+      if (counted || !(cur?.trackId || cur?.episodeId || cur?.voiceId)) return;
       if (listened >= PLAY_COUNT_SECONDS || (force && listened >= 5)) {
         counted = true;
         reportPlay(cur, listened);

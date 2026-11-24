@@ -78,7 +78,7 @@ function SongRow({ song, index, queue, signedIn }: { song: SongDTO; index: numbe
   const playingHere = active && isPlaying;
 
   return (
-    <li className={cn("glass flex items-center gap-4 rounded-xl p-3 transition-colors", active && "border-primary/40")}>
+    <li className={cn("group/row flex items-center gap-4 px-3 py-2.5 transition-colors hover:bg-primary/[0.03] sm:px-4", active && "bg-primary/[0.05]")}>
       <span className="hidden w-6 text-right text-sm tabular-nums text-muted-foreground sm:block">
         {playingHere ? <Visualizer bars={3} className="h-3" /> : index + 1}
       </span>
@@ -111,7 +111,9 @@ function SongRow({ song, index, queue, signedIn }: { song: SongDTO; index: numbe
           <span className="hidden sm:inline"> · {song.album}</span>
         </p>
       </div>
-      <span className="hidden rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground md:inline">{song.genre}</span>
+      <span className="hidden w-24 shrink-0 justify-center md:flex">
+        <span className="max-w-full truncate rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">{song.genre}</span>
+      </span>
       <span className="hidden w-20 items-center justify-end gap-1 text-xs tabular-nums text-muted-foreground sm:inline-flex" title={`${song.plays} plays`}>
         <Headphones className="size-3.5" aria-hidden /> {formatCompact(song.plays)}
       </span>
@@ -128,10 +130,24 @@ export function SongList({ songs, signedIn }: { songs: SongDTO[]; signedIn: bool
     return <p className="rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">No songs yet.</p>;
   }
   return (
-    <ul className="space-y-2">
-      {songs.map((s, i) => (
-        <SongRow key={s.id} song={s} index={i} queue={songs} signedIn={signedIn} />
-      ))}
-    </ul>
+    <div className="glass overflow-hidden rounded-2xl">
+      <div
+        aria-hidden
+        className="hidden items-center gap-4 border-b border-border/70 bg-muted/40 px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:flex"
+      >
+        <span className="w-6 text-right">#</span>
+        <span className="w-14 shrink-0" />
+        <span className="flex-1">Title</span>
+        <span className="hidden w-24 text-center md:block">Genre</span>
+        <span className="w-20 text-right">Plays</span>
+        <span className="w-[68px] text-center">Likes</span>
+        <span className="w-12 text-right">Time</span>
+      </div>
+      <ul className="divide-y divide-border/70">
+        {songs.map((s, i) => (
+          <SongRow key={s.id} song={s} index={i} queue={songs} signedIn={signedIn} />
+        ))}
+      </ul>
+    </div>
   );
 }

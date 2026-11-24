@@ -6,7 +6,8 @@ import { listAlbums, listArtists, listPodcasts } from "@/lib/catalog-db";
 import { GUEST_PREVIEW_SECONDS, PLAY_COUNT_SECONDS } from "@/lib/player-constants";
 import { SongList } from "@/components/music/song-list";
 import { AlbumGrid, ArtistGrid, PodcastGrid } from "@/components/music/cards";
-import { cn } from "@/lib/utils";
+import { HeroTabs, PageHero } from "@/components/layout/page-hero";
+import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Music",
@@ -49,38 +50,26 @@ export default async function MusicPage({ searchParams }: { searchParams: { tab?
   }
 
   return (
-    <div className="container max-w-5xl pb-16">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold sm:text-4xl">Music</h1>
-          <p className="mt-2 text-muted-foreground">{count}</p>
-        </div>
-        {!session && (
-          <p className="text-sm text-muted-foreground">
-            Guests hear {GUEST_PREVIEW_SECONDS}s previews.{" "}
-            <Link href="/login?callbackUrl=/music" className="font-medium text-primary hover:underline">
-              Sign in
-            </Link>{" "}
-            to listen fully and like songs.
-          </p>
-        )}
-      </header>
-
-      <nav aria-label="Browse" className="mb-6 flex gap-1 border-b border-border">
-        {TABS.map((t) => (
-          <Link
-            key={t.id}
-            href={t.id === "songs" ? "/music" : `/music?tab=${t.id}`}
-            aria-current={tab === t.id ? "page" : undefined}
-            className={cn(
-              "-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
-              tab === t.id ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+    <div className="container max-w-6xl space-y-8 pb-16">
+      <PageHero
+        eyebrow="Browse"
+        title="Music"
+        description={
+          <>
+            {count}
+            {!session && <span className="mt-1 block text-sm text-indigo-200/80">Guests hear {GUEST_PREVIEW_SECONDS}-second previews. Sign in to listen in full and like songs.</span>}
+          </>
+        }
+        actions={
+          !session && (
+            <Button asChild variant="glass" className="border-white/20 bg-white/10 text-white hover:bg-white/20">
+              <Link href="/login?callbackUrl=/music">Sign in</Link>
+            </Button>
+          )
+        }
+      >
+        <HeroTabs active={tab} tabs={TABS.map((t) => ({ id: t.id, label: t.label, href: t.id === "songs" ? "/music" : `/music?tab=${t.id}` }))} />
+      </PageHero>
 
       {body}
     </div>

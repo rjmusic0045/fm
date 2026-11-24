@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Disc3, IndianRupee, Mic2, Music2, Podcast, Users } from "lucide-react";
+import { Disc3, IndianRupee, Inbox, Mic2, MessagesSquare, Music2, Podcast, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -10,11 +10,13 @@ const items = [
   { href: "/admin/artists", label: "Artists", icon: Mic2 },
   { href: "/admin/albums", label: "Albums", icon: Disc3 },
   { href: "/admin/podcasts", label: "Podcasts", icon: Podcast },
+  { href: "/admin/voices", label: "People & Voices", icon: MessagesSquare },
+  { href: "/admin/submissions", label: "Review queue", icon: Inbox },
   { href: "/admin/users", label: "Users & plans", icon: Users },
   { href: "/admin/pricing", label: "Pricing", icon: IndianRupee },
 ];
 
-export function AdminNav() {
+export function AdminNav({ pendingReviews = 0 }: { pendingReviews?: number }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Admin sections" className="-mb-px flex gap-1 overflow-x-auto [scrollbar-width:none]">
@@ -31,6 +33,11 @@ export function AdminNav() {
             )}
           >
             <Icon className="size-4" aria-hidden /> {label}
+            {href === "/admin/submissions" && pendingReviews > 0 && (
+              <span className="rounded-full bg-red-500 px-1.5 text-[10px] font-bold leading-4 text-white" aria-label={`${pendingReviews} pending`}>
+                {pendingReviews}
+              </span>
+            )}
           </Link>
         );
       })}

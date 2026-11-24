@@ -33,7 +33,7 @@ const socials = [
 
 export function Footer() {
   return (
-    <footer className="relative mt-24 border-t border-foreground/[0.06]">
+    <footer className="theme-dark relative mt-24 bg-[#0B0B16] text-foreground">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neon-pink/50 to-transparent"

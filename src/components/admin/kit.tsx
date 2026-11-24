@@ -216,13 +216,14 @@ export function DeleteButton({ label, onConfirm, disabled }: { label: string; on
 
 export function PageHeader({ title, description, action }: { title: string; description?: string; action?: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="text-3xl font-semibold">{title}</h1>
-        {description && <p className="mt-1 text-muted-foreground">{description}</p>}
+    <header className="page-hero flex flex-wrap items-end justify-between gap-4 px-6 py-6 sm:px-8">
+      <div className="min-w-0">
+        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-200">Admin</p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
+        {description && <p className="mt-1.5 max-w-3xl text-sm text-indigo-100/85">{description}</p>}
       </div>
       {action}
-    </div>
+    </header>
   );
 }
 

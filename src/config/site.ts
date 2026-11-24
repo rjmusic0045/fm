@@ -10,6 +10,7 @@ export const siteConfig = {
     { label: "Home", href: "/" },
     { label: "Stations", href: "/#stations" },
     { label: "Music", href: "/music" },
+    { label: "People & Voices", href: "/voices" },
     { label: "Artist", href: "/artist" },
     { label: "Pricing", href: "/#pricing" },
   ],

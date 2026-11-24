@@ -10,6 +10,7 @@ import { CoverArt } from "@/components/player/cover-art";
 import { SongList } from "@/components/music/song-list";
 import { PlayAllButton } from "@/components/music/play-all-button";
 import { PremiumBadge } from "@/components/music/cards";
+import { CoverHero } from "@/components/layout/page-hero";
 
 export const dynamic = "force-dynamic";
 
@@ -30,14 +31,15 @@ export default async function AlbumPage({ params }: { params: { slug: string } }
       <Link href="/music?tab=albums" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> Albums
       </Link>
-      <header className="flex flex-col gap-6 sm:flex-row sm:items-end">
-        <CoverArt title={album.title} palette={album.palette} image={album.coverUrl ?? undefined} className="w-48 shrink-0 rounded-2xl shadow-lg sm:w-56" />
+      <CoverHero image={album.coverUrl} palette={album.palette}>
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
+        <CoverArt title={album.title} palette={album.palette} image={album.coverUrl ?? undefined} className="w-44 shrink-0 rounded-2xl shadow-2xl ring-1 ring-white/20 sm:w-56" />
         <div className="min-w-0 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Album</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Album</p>
           <h1 className="text-3xl font-semibold sm:text-5xl">{album.title}</h1>
-          <p className="text-muted-foreground">
+          <p className="text-white/80">
             {album.artistSlug ? (
-              <Link href={`/artists/${album.artistSlug}`} className="font-medium text-foreground hover:text-primary">
+              <Link href={`/artists/${album.artistSlug}`} className="font-semibold text-white hover:underline">
                 {album.artistName}
               </Link>
             ) : (
@@ -48,12 +50,13 @@ export default async function AlbumPage({ params }: { params: { slug: string } }
             {total ? ` · ${formatDuration(total)}` : ""}
           </p>
           {album.access === "PREMIUM" && <PremiumBadge />}
-          {album.description && <p className="max-w-2xl text-sm text-muted-foreground">{album.description}</p>}
+          {album.description && <p className="max-w-2xl text-sm text-white/75">{album.description}</p>}
           <div className="pt-2">
             <PlayAllButton songs={songs} />
           </div>
         </div>
-      </header>
+      </div>
+      </CoverHero>
       <SongList songs={songs} signedIn={Boolean(session)} />
     </div>
   );

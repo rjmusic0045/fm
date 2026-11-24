@@ -8,6 +8,7 @@ import { listSongs } from "@/lib/songs";
 import { SongList } from "@/components/music/song-list";
 import { AlbumGrid, PodcastGrid } from "@/components/music/cards";
 import { PlayAllButton } from "@/components/music/play-all-button";
+import { CoverHero } from "@/components/layout/page-hero";
 
 export const dynamic = "force-dynamic";
 
@@ -31,32 +32,34 @@ export default async function ArtistPage({ params }: { params: { slug: string } 
       <Link href="/music?tab=artists" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ChevronLeft className="size-4" aria-hidden /> Artists
       </Link>
-      <header className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
+      <CoverHero image={artist.imageUrl} palette={["#4F46E5", "#7C3AED"]}>
+      <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end">
         {artist.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={artist.imageUrl} alt={`${artist.name} photo`} className="size-40 shrink-0 rounded-full object-cover shadow-lg" />
+          <img src={artist.imageUrl} alt={`${artist.name} photo`} className="size-40 shrink-0 rounded-full object-cover shadow-2xl ring-4 ring-white/20" />
         ) : (
-          <span className="grid size-40 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground">
+          <span className="grid size-40 shrink-0 place-items-center rounded-full bg-white/15 text-white/80 ring-4 ring-white/20">
             <UserRound className="size-16" aria-hidden />
           </span>
         )}
         <div className="min-w-0 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Artist</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Artist</p>
           <h1 className="flex items-center gap-2 text-3xl font-semibold sm:text-5xl">
             {artist.name}
-            {artist.verified && <BadgeCheck className="size-7 shrink-0 text-primary" aria-label="Verified artist" />}
+            {artist.verified && <BadgeCheck className="size-7 shrink-0 text-sky-300" aria-label="Verified artist" />}
           </h1>
           {artist.city && (
-            <p className="flex items-center gap-1 text-muted-foreground">
+            <p className="flex items-center gap-1 text-white/80">
               <MapPin className="size-4" aria-hidden /> {artist.city}
             </p>
           )}
-          {artist.bio && <p className="max-w-2xl whitespace-pre-line text-sm text-muted-foreground">{artist.bio}</p>}
+          {artist.bio && <p className="line-clamp-4 max-w-2xl whitespace-pre-line text-sm text-white/75">{artist.bio}</p>}
           <div className="pt-2">
             <PlayAllButton songs={songs} />
           </div>
         </div>
-      </header>
+      </div>
+      </CoverHero>
 
       <section aria-labelledby="artist-songs" className="space-y-3">
         <h2 id="artist-songs" className="font-sans text-lg font-semibold">

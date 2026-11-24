@@ -4,6 +4,7 @@ import { getAdminSession } from "@/lib/admin";
 import { Logo } from "@/components/brand/logo";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { prisma } from "@/lib/prisma";
 import { MiniPlayer, PlayerSpacer } from "@/components/player/mini-player";
 
 export const dynamic = "force-dynamic";
@@ -12,10 +13,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Middleware already gates /admin; this re-checks the role against the DB.
   const session = await getAdminSession();
   if (!session) redirect("/login?callbackUrl=/admin");
+  const pendingReviews = await prisma.voiceSubmission.count({ where: { status: "PENDING" } });
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-border bg-white/90 shadow-[0_1px_2px_rgba(16,24,40,0.04)] backdrop-blur-md">
         <div className="container flex h-16 max-w-6xl items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo />
@@ -30,7 +32,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
         </div>
         <div className="container max-w-6xl">
-          <AdminNav />
+          <AdminNav pendingReviews={pendingReviews} />
         </div>
       </header>
       <main id="main" className="container max-w-6xl space-y-8 py-8">

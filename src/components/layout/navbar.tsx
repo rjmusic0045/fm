@@ -8,6 +8,7 @@ import { signOut } from "next-auth/react";
 import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { UserMenu, accountLinks } from "@/components/layout/user-menu";
+import { NotificationBell } from "@/components/layout/notification-bell";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
@@ -31,6 +32,7 @@ function AuthButtons({ signedIn, mobile = false }: { signedIn: boolean; mobile?:
           </Link>
         </Button>
         {/* Avatar menu: Settings, Admin (admins), Sign out */}
+        {!mobile && <NotificationBell />}
         {!mobile && <UserMenu />}
       </>
     );

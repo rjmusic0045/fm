@@ -8,25 +8,25 @@ const features = [
     icon: ShieldOff,
     title: "Ad-free listening",
     text: "No jingles, no sponsor reads. Just uninterrupted music on Premium.",
-    tint: "from-neon-violet/30",
+    tint: "from-violet-500 to-indigo-600",
   },
   {
     icon: Headphones,
     title: "HD audio",
     text: "Up to 320 kbps streams tuned for headphones, car stereos and smart speakers.",
-    tint: "from-neon-pink/30",
+    tint: "from-pink-500 to-rose-500",
   },
   {
     icon: Download,
     title: "Offline mode",
     text: "Save tracks and replay shows on the metro, on flights, anywhere.",
-    tint: "from-neon-amber/30",
+    tint: "from-amber-400 to-orange-500",
   },
   {
     icon: ListMusic,
     title: "Custom playlists",
     text: "Mix songs and stations into playlists that follow you across devices.",
-    tint: "from-sky-500/30",
+    tint: "from-sky-400 to-blue-600",
   },
 ];
 
@@ -48,7 +48,7 @@ export function FeaturesSection() {
           <Reveal key={title} delay={i * 0.08}>
             <GlassCard interactive className="h-full p-6">
               <div
-                className={`mb-5 grid size-12 place-items-center rounded-2xl bg-gradient-to-br ${tint} to-transparent ring-1 ring-foreground/10 transition-transform duration-300 group-hover/card:-rotate-6 group-hover/card:scale-110`}
+                className={`mb-5 grid size-12 place-items-center rounded-2xl bg-gradient-to-br ${tint} shadow-md ring-1 ring-white/20 transition-transform duration-300 group-hover/card:-rotate-6 group-hover/card:scale-110`}
               >
                 <Icon className="size-5 text-white" aria-hidden />
               </div>

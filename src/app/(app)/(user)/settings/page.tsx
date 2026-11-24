@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getEntitlement } from "@/lib/entitlement";
 import { SettingsPanels } from "@/components/account/settings-panels";
+import { PageHero } from "@/components/layout/page-hero";
 
 export const metadata: Metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -32,10 +33,7 @@ export default async function SettingsPage() {
   const methods = [...(user.passwordHash ? ["Email & password"] : []), ...user.accounts.map((a) => a.provider[0].toUpperCase() + a.provider.slice(1))];
   return (
     <div className="container max-w-3xl space-y-6 pb-16">
-      <div>
-        <h1 className="text-3xl font-semibold">Settings</h1>
-        <p className="mt-1 text-muted-foreground">Your account, preferences and subscription.</p>
-      </div>
+      <PageHero eyebrow="Account" title="Settings" description="Your profile, listening preferences, subscription and security." />
       <SettingsPanels
         data={{
           name: user.name ?? "",
