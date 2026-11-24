@@ -19,19 +19,17 @@ type Notice =
   | { kind: "expiring"; plan: string; daysLeft: number; periodEnd: string | null }
   | { kind: "revoked" };
 
-/** Warn this many days before a paid plan ends. */
+// Warn this many days before a paid plan ends.
 const EXPIRY_WARNING_DAYS = 3;
 
 const fmtDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "";
 const planName = (p: string) => p.charAt(0) + p.slice(1).toLowerCase();
 
-/**
- * Session-level notices:
- *  - keeps the player's "can play premium" flag in sync with the user's plan
- *  - once per login: popup if the plan has ended or ends within a few days
- *  - popup when this device was signed out because the account signed in elsewhere
- */
+// Session-level notices:
+// - keeps the player's "can play premium" flag in sync with the user's plan
+// - once per login: popup if the plan has ended or ends within a few days
+// - popup when this device was signed out because the account signed in elsewhere
 export function AccountNotices() {
   const { data: session, status } = useSession();
   const setCanPlayPremium = usePlayer((s) => s.setCanPlayPremium);

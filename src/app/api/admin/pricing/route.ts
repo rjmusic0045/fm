@@ -16,7 +16,7 @@ const planSchema = z.object({
   cta: z.string().trim().min(1).max(40),
 });
 
-/** Admin: save plan prices and features. Body: { plans: PlanInput[] } */
+// Admin: save plan prices and features. Body: { plans: PlanInput[] }
 export async function PUT(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");

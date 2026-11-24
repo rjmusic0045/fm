@@ -9,7 +9,7 @@ export function jsonOk<T extends Record<string, unknown>>(data: T = {} as T, ini
   return NextResponse.json({ ok: true, ...data }, init);
 }
 
-/** Parses a JSON body, returning null on malformed input instead of throwing. */
+// Parses a JSON body, returning null on malformed input instead of throwing.
 export async function readJson(req: Request): Promise<unknown> {
   try {
     return await req.json();
@@ -18,7 +18,7 @@ export async function readJson(req: Request): Promise<unknown> {
   }
 }
 
-/** Rejects cross-site form posts to JSON endpoints (defence in depth on top of SameSite cookies). */
+// Rejects cross-site form posts to JSON endpoints (defence in depth on top of SameSite cookies).
 export function isSameOrigin(req: Request): boolean {
   const origin = req.headers.get("origin");
   if (!origin) return true; // same-origin fetches from older browsers / server-to-server

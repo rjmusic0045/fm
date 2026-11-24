@@ -27,7 +27,7 @@ export function Badge({ className, variant, ...props }: BadgeProps) {
   return <span className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 
-/** Pulsing "LIVE" pill used on stations. */
+// Pulsing "LIVE" pill used on stations.
 export function LiveBadge({ className }: { className?: string }) {
   return (
     <Badge variant="live" className={cn("uppercase", className)}>

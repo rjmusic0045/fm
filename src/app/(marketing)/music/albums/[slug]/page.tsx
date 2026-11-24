@@ -43,7 +43,8 @@ export default async function AlbumPage({ params }: { params: { slug: string } }
             ) : (
               "Various artists"
             )}
-            {album.releaseYear ? ` · ${album.releaseYear}` : ""} · {album.genre} · {songs.length} tracks
+            {album.releaseYear ? ` · ${album.releaseYear}` : ""} · {album.genre}
+            {album.language ? ` · ${album.language}` : ""} · {songs.length} tracks
             {total ? ` · ${formatDuration(total)}` : ""}
           </p>
           {album.access === "PREMIUM" && <PremiumBadge />}

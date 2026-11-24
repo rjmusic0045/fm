@@ -6,18 +6,16 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { BlobServiceClient, type ContainerClient } from "@azure/storage-blob";
 
-/**
- * Media storage for uploaded songs and covers, with two backends:
- *
- *  - Azure Blob Storage, when AZURE_STORAGE_CONNECTION_STRING (or
- *    AZURE_STORAGE_ACCOUNT_NAME + AZURE_STORAGE_ACCOUNT_KEY) is set. Container:
- *    AZURE_STORAGE_CONTAINER(_NAME), default "uploads", kept private.
- *  - Local disk otherwise: UPLOAD_DIR, or <project>/storage/uploads (git-ignored).
- *
- * Either way files are addressed as /api/media/<kind>/<name> and streamed by
- * that route with HTTP Range support, so URLs stored in the database don't
- * depend on the backend.
- */
+// Media storage for uploaded songs and covers, with two backends:
+//
+// - Azure Blob Storage, when AZURE_STORAGE_CONNECTION_STRING (or
+// AZURE_STORAGE_ACCOUNT_NAME + AZURE_STORAGE_ACCOUNT_KEY) is set. Container:
+// AZURE_STORAGE_CONTAINER(_NAME), default "uploads", kept private.
+// - Local disk otherwise: UPLOAD_DIR, or <project>/storage/uploads (git-ignored).
+//
+// Either way files are addressed as /api/media/<kind>/<name> and streamed by
+// that route with HTTP Range support, so URLs stored in the database don't
+// depend on the backend.
 const MEDIA_PREFIX = "/api/media/";
 
 export const UPLOAD_ROOT = process.env.UPLOAD_DIR
@@ -62,17 +60,15 @@ export const CONTENT_TYPES: Record<string, string> = {
   webp: "image/webp",
 };
 
-/* ------------------------------------------------------------------------- */
-/* Backend selection                                                          */
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
+// Backend selection
+// -------------------------------------------------------------------------
 
 let containerPromise: Promise<ContainerClient> | null = null;
 
-/**
- * Azure connection string from either AZURE_STORAGE_CONNECTION_STRING, or
- * AZURE_STORAGE_ACCOUNT_NAME + AZURE_STORAGE_ACCOUNT_KEY. A connection string
- * still holding the portal's "YOUR_KEY" placeholder is ignored.
- */
+// Azure connection string from either AZURE_STORAGE_CONNECTION_STRING, or
+// AZURE_STORAGE_ACCOUNT_NAME + AZURE_STORAGE_ACCOUNT_KEY. A connection string
+// still holding the portal's "YOUR_KEY" placeholder is ignored.
 function azureConnectionString(): string | null {
   const conn = process.env.AZURE_STORAGE_CONNECTION_STRING?.trim();
   if (conn && !/AccountKey=(YOUR_KEY|<|;|$)/i.test(conn)) return conn;
@@ -85,7 +81,7 @@ function azureConnectionString(): string | null {
 const containerName = () =>
   process.env.AZURE_STORAGE_CONTAINER?.trim() || process.env.AZURE_STORAGE_CONTAINER_NAME?.trim() || "uploads";
 
-/** Blob container client, or null when running on local disk. Created (private) on first use. */
+// Blob container client, or null when running on local disk. Created (private) on first use.
 function blobContainer(): Promise<ContainerClient> | null {
   const conn = azureConnectionString();
   if (!conn) return null;
@@ -102,11 +98,11 @@ function blobContainer(): Promise<ContainerClient> | null {
 
 export const storageBackend = () => (azureConnectionString() ? "azure-blob" : "local");
 
-/* ------------------------------------------------------------------------- */
-/* Names                                                                      */
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
+// Names
+// -------------------------------------------------------------------------
 
-/** Validates /api/media/<kind>/<name> segments; returns the "<kind>/<name>" key or null. */
+// Validates /api/media/<kind>/<name> segments; returns the "<kind>/<name>" key or null.
 function mediaKey(segments: string[]): string | null {
   if (segments.length !== 2) return null;
   const [kind, name] = segments;
@@ -115,23 +111,23 @@ function mediaKey(segments: string[]): string | null {
   return `${kind}/${name}`;
 }
 
-/** Local path for a key, guarded against traversal outside UPLOAD_ROOT. */
+// Local path for a key, guarded against traversal outside UPLOAD_ROOT.
 function localPath(key: string): string | null {
   const full = path.join(UPLOAD_ROOT, ...key.split("/"));
   return full.startsWith(UPLOAD_ROOT + path.sep) ? full : null;
 }
 
-/** Kept for callers that only need local path resolution. */
+// Kept for callers that only need local path resolution.
 export function resolveUpload(segments: string[]): string | null {
   const key = mediaKey(segments);
   return key ? localPath(key) : null;
 }
 
-/* ------------------------------------------------------------------------- */
-/* Write / delete                                                             */
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
+// Write / delete
+// -------------------------------------------------------------------------
 
-/** Stores the file under a random name and returns its public /api/media URL. */
+// Stores the file under a random name and returns its public /api/media URL.
 export async function saveUpload(kind: UploadKind, file: File, ext: string): Promise<string> {
   const name = `${Date.now().toString(36)}-${randomBytes(8).toString("hex")}.${ext}`;
   const key = `${kind}/${name}`;
@@ -153,7 +149,7 @@ export async function saveUpload(kind: UploadKind, file: File, ext: string): Pro
   return `${MEDIA_PREFIX}${key}`;
 }
 
-/** Best-effort delete of a previously saved upload (ignores external URLs). */
+// Best-effort delete of a previously saved upload (ignores external URLs).
 export async function deleteUpload(url: string | null | undefined) {
   if (!url?.startsWith(MEDIA_PREFIX)) return;
   const key = mediaKey(url.slice(MEDIA_PREFIX.length).split("/"));
@@ -172,13 +168,13 @@ export async function deleteUpload(url: string | null | undefined) {
   }
 }
 
-/* ------------------------------------------------------------------------- */
-/* Read (streaming with Range support)                                        */
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
+// Read (streaming with Range support)
+// -------------------------------------------------------------------------
 
 type ByteRange = { start: number; end: number } | "unsatisfiable" | null;
 
-/** Parses a single "bytes=a-b" Range header against a known size. */
+// Parses a single "bytes=a-b" Range header against a known size.
 function parseRange(header: string | null, size: number): ByteRange {
   const m = header && /^bytes=(\d*)-(\d*)$/.exec(header.trim());
   if (!m || (!m[1] && !m[2])) return null;
@@ -197,7 +193,7 @@ function parseRange(header: string | null, size: number): ByteRange {
 
 const notFound = () => new Response("Not found", { status: 404 });
 
-/** Builds the HTTP response for /api/media/<kind>/<name>, from whichever backend is active. */
+// Builds the HTTP response for /api/media/<kind>/<name>, from whichever backend is active.
 export async function mediaResponse(segments: string[], rangeHeader: string | null): Promise<Response> {
   const key = mediaKey(segments);
   if (!key) return notFound();

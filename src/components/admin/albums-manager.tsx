@@ -12,6 +12,10 @@ import {
   Field,
   FormError,
   ImagePicker,
+  LanguageSelect,
+  PublishControl,
+  StatusBadge,
+  initialPublishMode,
   inputClass,
   textareaClass,
   useAdminAction,
@@ -33,6 +37,9 @@ export interface AlbumRow {
   artistId: string | null;
   artistName: string | null;
   songIds: string[];
+  language: string | null;
+  releaseDate: string | null;
+  publishAt: string | null;
 }
 
 export interface SongOption {
@@ -117,7 +124,6 @@ function AlbumForm({ album, artists, songs, onClose }: { album?: AlbumRow; artis
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     fd.set("songIds", JSON.stringify(songIds));
-    fd.set("isActive", (e.currentTarget.elements.namedItem("isActive") as HTMLInputElement).checked ? "true" : "false");
     void run(() => fetch(album ? `/api/admin/albums/${album.id}` : "/api/admin/albums", { method: album ? "PATCH" : "POST", body: fd }), onClose);
   };
 
@@ -143,9 +149,10 @@ function AlbumForm({ album, artists, songs, onClose }: { album?: AlbumRow; artis
             <Field label="Genre">
               <input name="genre" maxLength={40} defaultValue={album?.genre} className={inputClass} placeholder="Pop" />
             </Field>
-            <Field label="Release year">
-              <input name="releaseYear" type="number" min={1900} max={2100} defaultValue={album?.releaseYear ?? new Date().getFullYear()} className={inputClass} />
+            <Field label="Release date" hint="Sets the year shown on the album.">
+              <input name="releaseDate" type="date" defaultValue={album?.releaseDate?.slice(0, 10) ?? ""} className={inputClass} />
             </Field>
+            <LanguageSelect defaultValue={album?.language} />
           </div>
           <Field label="Description">
             <textarea name="description" maxLength={2000} defaultValue={album?.description} className={textareaClass} />
@@ -155,10 +162,7 @@ function AlbumForm({ album, artists, songs, onClose }: { album?: AlbumRow; artis
       <TrackPicker songs={songs} value={songIds} onChange={setSongIds} albumId={album?.id} />
       <div className="grid gap-4 sm:grid-cols-2">
         <AccessSelect defaultValue={album?.access} />
-        <label className="flex items-center gap-2 self-center text-sm">
-          <input type="checkbox" name="isActive" defaultChecked={album?.isActive ?? true} className="size-4 accent-[hsl(var(--primary))]" />
-          Published (visible to listeners)
-        </label>
+        <PublishControl defaultMode={album ? initialPublishMode(album.isActive, album.publishAt) : "now"} defaultAt={album?.publishAt} />
       </div>
       <p className="text-xs text-muted-foreground">A Premium album makes all of its songs Premium.</p>
       <FormError error={error} />
@@ -190,7 +194,8 @@ function AlbumCard({ album, onEdit }: { album: AlbumRow; onEdit: () => void }) {
           <span className="inline-flex items-center gap-1">
             <Disc3 className="size-3" aria-hidden /> {album.songIds.length} tracks
           </span>
-          {!album.isActive && <span className="rounded-full bg-muted px-2 py-0.5">Hidden</span>}
+          <StatusBadge isActive={album.isActive} publishAt={album.publishAt} />
+          {album.language && <span>{album.language}</span>}
         </div>
       </div>
       <div className="flex shrink-0 items-start gap-1">

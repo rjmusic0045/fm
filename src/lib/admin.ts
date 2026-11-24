@@ -2,11 +2,9 @@ import "server-only";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-/**
- * Returns the session only if the signed-in user is an ADMIN. Re-checks the
- * role in the database so a demoted admin loses access immediately, even
- * though their JWT still says ADMIN.
- */
+// Returns the session only if the signed-in user is an ADMIN. Re-checks the
+// role in the database so a demoted admin loses access immediately, even
+// though their JWT still says ADMIN.
 export async function getAdminSession() {
   const session = await getSession();
   if (!session || session.user.role !== "ADMIN") return null;
@@ -22,7 +20,7 @@ export interface SongStats {
   likes: number;
 }
 
-/** Per-song unique listeners (signed-in users) and like counts, keyed by song id. */
+// Per-song unique listeners (signed-in users) and like counts, keyed by song id.
 export async function songStats(songIds: string[]): Promise<Map<string, Omit<SongStats, "plays">>> {
   const map = new Map<string, Omit<SongStats, "plays">>();
   if (!songIds.length) return map;

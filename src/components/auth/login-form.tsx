@@ -30,7 +30,7 @@ export function LoginForm({ callbackUrl, initialError, facebookEnabled }: LoginF
   const [errors, setErrors] = React.useState<Partial<Record<Field, string>>>({});
   const [formError, setFormError] = React.useState<string | null>(initialError ?? null);
   const [noAccountEmail, setNoAccountEmail] = React.useState<string | null>(null);
-  /** Password was right, but the account is active on another device: ask before taking over. */
+  // Password was right, but the account is active on another device: ask before taking over.
   const [confirmTakeover, setConfirmTakeover] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [fbLoading, setFbLoading] = React.useState(false);

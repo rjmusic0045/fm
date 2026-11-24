@@ -14,15 +14,15 @@ export interface PlayableItem {
   subtitle: string;
   src: string;
   palette: Palette;
-  /** Known duration in seconds (songs only). */
+  // Known duration in seconds (songs only).
   duration?: number;
-  /** Optional cover image URL; falls back to generative art. */
+  // Optional cover image URL; falls back to generative art.
   image?: string;
-  /** Database song id: when set, plays are reported to /api/songs/:id/play. */
+  // Database song id: when set, plays are reported to /api/songs/:id/play.
   trackId?: string;
-  /** Database podcast episode id: plays are reported to /api/episodes/:id/play. */
+  // Database podcast episode id: plays are reported to /api/episodes/:id/play.
   episodeId?: string;
-  /** PREMIUM item: listeners without an active plan only get a preview. */
+  // PREMIUM item: listeners without an active plan only get a preview.
   premium?: boolean;
 }
 
@@ -54,13 +54,13 @@ interface PlayerState {
   duration: number;
   volume: number;
   muted: boolean;
-  /** Seconds heard of the current item (used for the guest preview limit). */
+  // Seconds heard of the current item (used for the guest preview limit).
   previewElapsed: number;
   isGuest: boolean;
-  /** Active subscription (or admin): PREMIUM items play in full. */
+  // Active subscription (or admin): PREMIUM items play in full.
   canPlayPremium: boolean;
   gateOpen: boolean;
-  /** Why the preview gate opened. */
+  // Why the preview gate opened.
   gateReason: "guest" | "premium";
   error: string | null;
 }
@@ -78,7 +78,7 @@ interface PlayerActions {
   setGuest: (guest: boolean) => void;
   setCanPlayPremium: (v: boolean) => void;
   closeGate: () => void;
-  /** Internal: called by the audio engine. */
+  // Internal: called by the audio engine.
   _sync: (patch: Partial<PlayerState>) => void;
 }
 
@@ -91,7 +91,7 @@ export const registerAudio = (el: HTMLAudioElement | null) => {
 };
 export const getAudio = () => audioEl;
 
-/** Whether the current item is preview-only for this listener, and why. */
+// Whether the current item is preview-only for this listener, and why.
 export function previewReason(s: Pick<PlayerState, "isGuest" | "canPlayPremium" | "queue" | "index">): "guest" | "premium" | null {
   if (s.isGuest) return "guest";
   if (s.queue[s.index]?.premium && !s.canPlayPremium) return "premium";
@@ -189,7 +189,7 @@ export const usePlayer = create<PlayerStore>((set, get) => {
   };
 });
 
-/** Convenience selectors */
+// Convenience selectors
 export const useCurrentItem = () => usePlayer((s) => s.queue[s.index] as PlayableItem | undefined);
 export const useIsActive = (kind: PlayableItem["kind"], id: string) =>
   usePlayer((s) => {

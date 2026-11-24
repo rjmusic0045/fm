@@ -27,6 +27,7 @@ export default async function AdminPodcastsPage() {
           access: p.access,
           isActive: p.isActive,
           artistId: p.artistId,
+          language: p.language,
           episodes: p.episodes.map((e) => ({
             id: e.id,
             title: e.title,
@@ -36,6 +37,9 @@ export default async function AdminPodcastsPage() {
             plays: e.plays,
             isActive: e.isActive,
             publishedAt: e.publishedAt.toISOString(),
+            season: e.season,
+            imageUrl: e.imageUrl,
+            publishAt: e.publishAt?.toISOString() ?? null,
           })),
         }))}
       />

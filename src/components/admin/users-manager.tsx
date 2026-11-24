@@ -12,7 +12,7 @@ export interface UserRow {
   role: "USER" | "ADMIN";
   createdAt: string;
   lastLoginAt: string | null;
-  /** Signed in on a device seen in the last few minutes. */
+  // Signed in on a device seen in the last few minutes.
   online: boolean;
   plan: "FREE" | "PREMIUM" | "FAMILY";
   planState: "none" | "active" | "expired";

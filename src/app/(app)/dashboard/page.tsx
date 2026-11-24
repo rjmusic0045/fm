@@ -11,10 +11,8 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-/**
- * Phase 4 landing spot after sign-in: proves the session round-trip end to end.
- * The full dashboard (sidebar, For You rows, Now Playing) replaces this in Phase 6.
- */
+// Phase 4 landing spot after sign-in: proves the session round-trip end to end.
+// The full dashboard (sidebar, For You rows, Now Playing) replaces this in Phase 6.
 export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect("/login?callbackUrl=/dashboard");

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getAdminSession, isObjectId } from "@/lib/admin";
 import { isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/api";
 import { deleteUpload } from "@/lib/storage";
+import { LANGUAGES } from "@/config/taxonomy";
 
 export const runtime = "nodejs";
 
@@ -13,15 +14,17 @@ const patchSchema = z.object({
   genre: z.string().trim().min(1).max(40).optional(),
   access: z.enum(["FREE", "PREMIUM"]).optional(),
   isActive: z.boolean().optional(),
-  /** null unlinks */
+  // null unlinks
   artistId: objectId.nullable().optional(),
   albumId: objectId.nullable().optional(),
+  language: z.enum(LANGUAGES).nullable().optional(),
+  // ISO date or datetime strings; null clears.
+  releaseDate: z.string().datetime({ offset: true }).or(z.string().date()).nullable().optional(),
+  publishAt: z.string().datetime({ offset: true }).nullable().optional(),
 });
 
-/**
- * Admin: edit a song. JSON body: any of title, artist, genre, access, isActive,
- * artistId (null = unlink), albumId (null = make it a single).
- */
+// Admin: edit a song. JSON body: any of title, artist, genre, access, isActive,
+// artistId (null = unlink), albumId (null = make it a single).
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");
@@ -29,12 +32,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   const parsed = patchSchema.safeParse(await readJson(req));
   if (!parsed.success) return jsonError(400, "INVALID_INPUT", "Check the song fields.");
-  const { artistId, albumId, ...rest } = parsed.data;
+  const { artistId, albumId, releaseDate, publishAt, ...rest } = parsed.data;
 
   const existing = await prisma.song.findUnique({ where: { id: params.id }, select: { albumId: true } });
   if (!existing) return jsonError(404, "NOT_FOUND", "Song not found.");
 
   const data: Record<string, unknown> = { ...rest };
+  if (releaseDate !== undefined) data.releaseDate = releaseDate ? new Date(releaseDate) : null;
+  if (publishAt !== undefined) data.publishAt = publishAt ? new Date(publishAt) : null;
   if (artistId !== undefined) {
     data.artistId = artistId;
     if (artistId) {
@@ -61,7 +66,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return jsonOk({ song });
 }
 
-/** Admin: delete a song, its stats and its uploaded files. */
+// Admin: delete a song, its stats and its uploaded files.
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");

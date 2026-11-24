@@ -14,10 +14,8 @@ import { LiveBadge } from "@/components/ui/badge";
 import { Visualizer } from "@/components/audio/visualizer";
 import { usePlayer } from "@/stores/player-store";
 
-/**
- * 3D vinyl turntable. Tilts toward the pointer, spins continuously and
- * drops the tonearm onto the record while audio is playing.
- */
+// 3D vinyl turntable. Tilts toward the pointer, spins continuously and
+// drops the tonearm onto the record while audio is playing.
 export function Vinyl() {
   const reduce = useReducedMotion();
   const isPlaying = usePlayer((s) => s.isPlaying);

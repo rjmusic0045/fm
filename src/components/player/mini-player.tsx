@@ -194,7 +194,7 @@ export function MiniPlayer() {
   );
 }
 
-/** Reserves space at the bottom of the page so the player never covers content. */
+// Reserves space at the bottom of the page so the player never covers content.
 export function PlayerSpacer() {
   const active = usePlayer((s) => s.queue.length > 0);
   return <div aria-hidden className={cn("transition-[height] duration-300", active ? "h-24 md:h-28" : "h-0")} />;

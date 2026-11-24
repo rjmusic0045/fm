@@ -1,8 +1,6 @@
-/**
- * Static demo catalog used by the public landing page (and as seed data later).
- * Audio: royalty-free SoundHelix examples (https://www.soundhelix.com), CC-licensed demo tracks.
- * "Live" stations are simulated with looping long-form streams that start at a random offset.
- */
+// Static demo catalog used by the public landing page (and as seed data later).
+// Audio: royalty-free SoundHelix examples (https://www.soundhelix.com), CC-licensed demo tracks.
+// "Live" stations are simulated with looping long-form streams that start at a random offset.
 
 export type Palette = readonly [from: string, to: string];
 
@@ -22,7 +20,7 @@ export interface Song {
   title: string;
   artist: string;
   album: string;
-  /** seconds */
+  // seconds
   duration: number;
   src: string;
   palette: Palette;

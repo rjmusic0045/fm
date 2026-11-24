@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cn, formatDuration } from "@/lib/utils";
 
-/** Deterministic pseudo-random peaks from a seed string, so SSR and client agree. */
+// Deterministic pseudo-random peaks from a seed string, so SSR and client agree.
 function peaksFor(seed: string, count: number): number[] {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
@@ -26,11 +26,11 @@ function peaksFor(seed: string, count: number): number[] {
 
 interface WaveformProps {
   seed: string;
-  /** 0..1 */
+  // 0..1
   progress: number;
   duration: number;
   active: boolean;
-  /** Seek to fraction 0..1 */
+  // Seek to fraction 0..1
   onSeek: (fraction: number) => void;
   bars?: number;
   className?: string;

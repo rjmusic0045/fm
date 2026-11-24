@@ -5,7 +5,7 @@ import { GUEST_PREVIEW_SECONDS, PLAY_COUNT_SECONDS, previewReason, registerAudio
 
 const itemKey = (i?: PlayableItem) => (i ? `${i.kind}:${i.id}` : "");
 
-/** Fire-and-forget play report; keepalive lets it survive page navigation. */
+// Fire-and-forget play report; keepalive lets it survive page navigation.
 function reportPlay(item: PlayableItem, seconds: number) {
   const url = item.episodeId ? `/api/episodes/${item.episodeId}/play` : `/api/songs/${item.trackId}/play`;
   void fetch(url, {
@@ -16,10 +16,8 @@ function reportPlay(item: PlayableItem, seconds: number) {
   }).catch(() => undefined);
 }
 
-/**
- * Headless audio driver. Owns the single HTMLAudioElement and keeps it in sync
- * with the zustand store via imperative subscriptions (no React re-renders).
- */
+// Headless audio driver. Owns the single HTMLAudioElement and keeps it in sync
+// with the zustand store via imperative subscriptions (no React re-renders).
 export function AudioEngine({ isGuest = true }: { isGuest?: boolean }) {
   useEffect(() => {
     usePlayer.getState().setGuest(isGuest);

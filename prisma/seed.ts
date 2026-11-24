@@ -1,10 +1,8 @@
-/**
- * Seeds stations and songs from the demo catalog, and optionally an admin user.
- * Idempotent: safe to run repeatedly (upserts by slug / email).
- *
- *   npm run db:seed
- *   SEED_ADMIN_EMAIL=you@example.com SEED_ADMIN_PASSWORD='S3cure!pass' npm run db:seed
- */
+// Seeds stations and songs from the demo catalog, and optionally an admin user.
+// Idempotent: safe to run repeatedly (upserts by slug / email).
+//
+// npm run db:seed
+// SEED_ADMIN_EMAIL=you@example.com SEED_ADMIN_PASSWORD='S3cure!pass' npm run db:seed
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { songs, stations } from "../src/data/catalog";

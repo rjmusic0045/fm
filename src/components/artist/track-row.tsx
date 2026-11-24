@@ -66,7 +66,7 @@ function ActionButton({
 
 interface TrackRowProps {
   track: ArtistTrack;
-  /** The list this row belongs to, so "next" continues through it. */
+  // The list this row belongs to, so "next" continues through it.
   queue: ArtistTrack[];
   index: number;
   rank?: number;
@@ -107,7 +107,7 @@ export function TrackRow({ track, queue, index, rank }: TrackRowProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      /* clipboard unavailable: ignore in demo */
+      // clipboard unavailable: ignore in demo
     }
   };
 

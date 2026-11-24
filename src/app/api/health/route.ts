@@ -5,11 +5,9 @@ import { authSecretSource } from "@/lib/auth-secret";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/**
- * Deployment health check. Reports only whether required settings are present
- * (never their values) and whether the database answers, so a misconfigured
- * App Service can be diagnosed without portal access.
- */
+// Deployment health check. Reports only whether required settings are present
+// (never their values) and whether the database answers, so a misconfigured
+// App Service can be diagnosed without portal access.
 export async function GET(req: Request) {
   const nextauthUrl = process.env.NEXTAUTH_URL?.trim();
   let urlOk = false;

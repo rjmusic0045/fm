@@ -11,7 +11,7 @@ import {
   deleteUpload,
   saveUpload,
 } from "@/lib/storage";
-import { accessSchema, refField } from "@/lib/admin-forms";
+import { accessSchema, dateField, isFieldError, languageField, publishFields, refField } from "@/lib/admin-forms";
 
 export const runtime = "nodejs";
 
@@ -42,7 +42,7 @@ const slugify = (s: string) =>
     .replace(/[\s_-]+/g, "-")
     .slice(0, 60) || "track";
 
-/** Admin: upload a song (multipart form: title, artist, album?, genre?, duration?, audio, cover?). */
+// Admin: upload a song (multipart form: title, artist, album?, genre?, duration?, audio, cover?).
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   const session = await getAdminSession();
@@ -94,6 +94,10 @@ export async function POST(req: Request) {
   if (artistId && !artistRow) return jsonError(400, "INVALID_INPUT", "Choose an existing artist.");
   if (albumId && !albumRow) return jsonError(400, "INVALID_INPUT", "Choose an existing album.");
   if (artistRow) artist = artistRow.name;
+  const language = languageField(form);
+  const releaseDate = dateField(form, "releaseDate");
+  const pub = publishFields(form);
+  for (const v of [language, releaseDate, pub]) if (isFieldError(v)) return jsonError(400, "INVALID_INPUT", v.error);
   let audioUrl: string | undefined;
   let coverUrl: string | undefined;
   try {
@@ -118,6 +122,9 @@ export async function POST(req: Request) {
         artistId,
         albumId,
         trackNumber: albumRow ? albumRow._count.songs + 1 : null,
+        language: (language as string | null | undefined) ?? null,
+        releaseDate: (releaseDate as Date | null | undefined) ?? null,
+        ...((pub as { isActive: boolean; publishAt: Date | null } | undefined) ?? {}),
       },
     });
     return jsonOk({ song }, { status: 201 });

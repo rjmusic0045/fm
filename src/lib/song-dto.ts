@@ -1,7 +1,7 @@
 import type { Palette } from "@/data/catalog";
 import type { PlayableItem } from "@/stores/player-store";
 
-/** Song as sent to the browser (serialisable, with stats). */
+// Song as sent to the browser (serialisable, with stats).
 export interface SongDTO {
   id: string;
   title: string;
@@ -14,21 +14,25 @@ export interface SongDTO {
   palette: Palette;
   plays: number;
   likes: number;
-  /** Unique signed-in users who listened. */
+  // Unique signed-in users who listened.
   listeners: number;
-  /** Whether the current user liked it. */
+  // Whether the current user liked it.
   liked: boolean;
   isActive: boolean;
-  /** Uploaded by an admin (vs. seeded demo catalog). */
+  // Uploaded by an admin (vs. seeded demo catalog).
   uploaded: boolean;
   createdAt: string;
-  /** Effective access: PREMIUM if the song or its album is Premium. */
+  // Effective access: PREMIUM if the song or its album is Premium.
   access: "FREE" | "PREMIUM";
-  /** The song's own setting (what admins edit). */
+  // The song's own setting (what admins edit).
   ownAccess: "FREE" | "PREMIUM";
   artistId: string | null;
   albumId: string | null;
   trackNumber: number | null;
+  language: string | null;
+  releaseDate: string | null;
+  // Scheduled release time (ISO) if any.
+  publishAt: string | null;
 }
 
 export const dtoToItem = (s: SongDTO): PlayableItem => ({

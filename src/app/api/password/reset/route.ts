@@ -10,7 +10,7 @@ const bodySchema = z.object({
   password: passwordSchema,
 });
 
-/** Completes a password reset using the emailed token. Tokens are single-use. */
+// Completes a password reset using the emailed token. Tokens are single-use.
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
 

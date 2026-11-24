@@ -1,8 +1,9 @@
 import "server-only";
+import { released } from "@/lib/release";
 import { prisma } from "@/lib/prisma";
 import type { Palette } from "@/data/catalog";
 
-/** Read models for the public Albums / Podcasts / Artists pages (published items only). */
+// Read models for the public Albums / Podcasts / Artists pages (published items only).
 
 export interface AlbumCard {
   id: string;
@@ -39,6 +40,8 @@ export interface EpisodeDTO {
   audioUrl: string;
   plays: number;
   publishedAt: string;
+  season: number | null;
+  imageUrl: string | null;
 }
 
 export interface ArtistCard {
@@ -51,12 +54,13 @@ export interface ArtistCard {
   songCount: number;
 }
 
-const albumInclude = {
+// Built per call so the release cut-off ("now") is fresh on every request.
+const albumInclude = () => ({
   artist: { select: { name: true, slug: true } },
-  _count: { select: { songs: { where: { isActive: true } } } },
-} as const;
+  _count: { select: { songs: { where: { isActive: true, ...released() } } } },
+});
 
-type AlbumWithRefs = Awaited<ReturnType<typeof prisma.album.findFirst<{ include: typeof albumInclude }>>>;
+type AlbumWithRefs = Awaited<ReturnType<typeof prisma.album.findFirst<{ include: ReturnType<typeof albumInclude> }>>>;
 
 const toAlbumCard = (a: NonNullable<AlbumWithRefs>): AlbumCard => ({
   id: a.id,
@@ -74,25 +78,25 @@ const toAlbumCard = (a: NonNullable<AlbumWithRefs>): AlbumCard => ({
 
 export async function listAlbums(opts: { artistId?: string } = {}): Promise<AlbumCard[]> {
   const rows = await prisma.album.findMany({
-    where: { isActive: true, ...(opts.artistId ? { artistId: opts.artistId } : {}) },
+    where: { isActive: true, ...released(), ...(opts.artistId ? { artistId: opts.artistId } : {}) },
     orderBy: { createdAt: "desc" },
-    include: albumInclude,
+    include: albumInclude(),
   });
   return rows.map(toAlbumCard);
 }
 
 export async function getAlbum(slug: string) {
-  const a = await prisma.album.findFirst({ where: { slug, isActive: true }, include: albumInclude });
-  return a ? { ...toAlbumCard(a), description: a.description } : null;
+  const a = await prisma.album.findFirst({ where: { slug, isActive: true, ...released() }, include: albumInclude() });
+  return a ? { ...toAlbumCard(a), description: a.description, language: a.language } : null;
 }
 
-const podcastInclude = { _count: { select: { episodes: { where: { isActive: true } } } } } as const;
+const podcastInclude = () => ({ _count: { select: { episodes: { where: { isActive: true, ...released() } } } } });
 
 export async function listPodcasts(opts: { artistId?: string } = {}): Promise<PodcastCard[]> {
   const rows = await prisma.podcast.findMany({
     where: { isActive: true, ...(opts.artistId ? { artistId: opts.artistId } : {}) },
     orderBy: { createdAt: "desc" },
-    include: podcastInclude,
+    include: podcastInclude(),
   });
   return rows.map((p) => ({
     id: p.id,
@@ -110,7 +114,7 @@ export async function listPodcasts(opts: { artistId?: string } = {}): Promise<Po
 export async function getPodcast(slug: string) {
   const p = await prisma.podcast.findFirst({
     where: { slug, isActive: true },
-    include: { episodes: { where: { isActive: true }, orderBy: { episodeNumber: "desc" } } },
+    include: { episodes: { where: { isActive: true, ...released() }, orderBy: [{ season: "desc" }, { episodeNumber: "desc" }] } },
   });
   if (!p) return null;
   return {
@@ -123,6 +127,7 @@ export async function getPodcast(slug: string) {
     coverUrl: p.coverUrl,
     palette: [p.coverFrom, p.coverTo] as Palette,
     access: p.access,
+    language: p.language,
     episodes: p.episodes.map(
       (e): EpisodeDTO => ({
         id: e.id,
@@ -132,7 +137,10 @@ export async function getPodcast(slug: string) {
         duration: e.duration,
         audioUrl: e.audioUrl,
         plays: e.plays,
-        publishedAt: e.publishedAt.toISOString(),
+        // Scheduled episodes show their release time as the publish date.
+        publishedAt: (e.publishAt ?? e.publishedAt).toISOString(),
+        season: e.season,
+        imageUrl: e.imageUrl,
       }),
     ),
   };
@@ -141,7 +149,7 @@ export async function getPodcast(slug: string) {
 export async function listArtists(): Promise<ArtistCard[]> {
   const rows = await prisma.artist.findMany({
     orderBy: { name: "asc" },
-    include: { _count: { select: { songs: { where: { isActive: true } } } } },
+    include: { _count: { select: { songs: { where: { isActive: true, ...released() } } } } },
   });
   return rows.map((a) => ({
     id: a.id,

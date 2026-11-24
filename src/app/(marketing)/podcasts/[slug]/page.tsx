@@ -28,7 +28,10 @@ export default async function PodcastPage({ params }: { params: { slug: string }
       <header className="flex flex-col gap-6 sm:flex-row sm:items-end">
         <CoverArt title={podcast.title} palette={podcast.palette} image={podcast.coverUrl ?? undefined} className="w-48 shrink-0 rounded-2xl shadow-lg" />
         <div className="min-w-0 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Podcast · {podcast.category}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Podcast · {podcast.category}
+            {podcast.language ? ` · ${podcast.language}` : ""}
+          </p>
           <h1 className="text-3xl font-semibold sm:text-4xl">{podcast.title}</h1>
           {podcast.host && <p className="text-muted-foreground">Hosted by {podcast.host}</p>}
           {podcast.access === "PREMIUM" && <PremiumBadge />}

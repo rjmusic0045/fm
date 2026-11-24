@@ -1,9 +1,7 @@
 "use client";
 
-/**
- * Tiny synthesized UI sounds via the Web Audio API.
- * No audio files to download, works offline, zero layout cost.
- */
+// Tiny synthesized UI sounds via the Web Audio API.
+// No audio files to download, works offline, zero layout cost.
 let ctx: AudioContext | null = null;
 
 function getCtx(): AudioContext | null {
@@ -48,7 +46,7 @@ function thump(ac: AudioContext, at: number, from: number, to: number, gain: num
   osc.stop(at + 0.08);
 }
 
-/** Mechanical pull-switch "click-clack". Slightly brighter when turning on. */
+// Mechanical pull-switch "click-clack". Slightly brighter when turning on.
 export function playSwitchClick(on: boolean) {
   const ac = getCtx();
   if (!ac) return;
@@ -58,7 +56,7 @@ export function playSwitchClick(on: boolean) {
   noiseBurst(ac, t + 0.045, 0.015, 0.35, on ? 5200 : 4200);
 }
 
-/** Soft electrical hum swell as the bulb warms up. */
+// Soft electrical hum swell as the bulb warms up.
 export function playBulbHum() {
   const ac = getCtx();
   if (!ac) return;

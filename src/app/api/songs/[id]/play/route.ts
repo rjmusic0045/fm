@@ -1,16 +1,15 @@
 import { z } from "zod";
+import { released } from "@/lib/release";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { isObjectId } from "@/lib/admin";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/api";
 
-/**
- * Records one counted play. The player calls this once per listen, after
- * PLAY_COUNT_SECONDS of actual playback (or at the end of shorter tracks).
- * Guests bump the play counter; signed-in users also get a history row,
- * which is what "unique listeners" is computed from.
- */
+// Records one counted play. The player calls this once per listen, after
+// PLAY_COUNT_SECONDS of actual playback (or at the end of shorter tracks).
+// Guests bump the play counter; signed-in users also get a history row,
+// which is what "unique listeners" is computed from.
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!isObjectId(params.id)) return jsonError(404, "NOT_FOUND", "Song not found.");
@@ -24,10 +23,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const limit = await rateLimit(`play:${who}:${params.id}`, 1, 30);
   if (!limit.allowed) return jsonOk({ counted: false });
 
-  const song = await prisma.song
-    .update({ where: { id: params.id, isActive: true }, data: { plays: { increment: 1 } }, select: { plays: true } })
-    .catch(() => null);
-  if (!song) return jsonError(404, "NOT_FOUND", "Song not found.");
+  // Check first: an update on a missing/unreleased song would log a Prisma error for a normal 404.
+  const playable = await prisma.song.count({ where: { id: params.id, isActive: true, ...released() } });
+  if (!playable) return jsonError(404, "NOT_FOUND", "Song not found.");
+  const song = await prisma.song.update({ where: { id: params.id }, data: { plays: { increment: 1 } }, select: { plays: true } });
 
   if (session) {
     await prisma.listeningHistory

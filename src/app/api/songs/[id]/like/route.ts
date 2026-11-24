@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { released } from "@/lib/release";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { isObjectId } from "@/lib/admin";
 import { isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/api";
 
-/** Like / unlike a song. Body: { liked: boolean }. Signed-in users only. */
+// Like / unlike a song. Body: { liked: boolean }. Signed-in users only.
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   const session = await getSession();
@@ -14,7 +15,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const parsed = z.object({ liked: z.boolean() }).safeParse(await readJson(req));
   if (!parsed.success) return jsonError(400, "INVALID_INPUT", "Expected { liked: boolean }.");
 
-  const exists = await prisma.song.count({ where: { id: params.id, isActive: true } });
+  const exists = await prisma.song.count({ where: { id: params.id, isActive: true, ...released() } });
   if (!exists) return jsonError(404, "NOT_FOUND", "Song not found.");
 
   const key = { userId: session.user.id, type: "SONG" as const, targetId: params.id };

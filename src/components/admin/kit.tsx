@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { Crown, ImagePlus, Trash2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { LANGUAGES } from "@/config/taxonomy";
 
-/** Small shared building blocks for the admin screens. */
+// Small shared building blocks for the admin screens.
 
 export const inputClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/15";
@@ -34,7 +35,7 @@ export function AccessBadge({ access }: { access: AccessValue }) {
   );
 }
 
-/** Free / Premium segmented control backed by a hidden input named `access`. */
+// Free / Premium segmented control backed by a hidden input named `access`.
 export function AccessSelect({ defaultValue = "FREE", name = "access" }: { defaultValue?: AccessValue; name?: string }) {
   const [value, setValue] = React.useState<AccessValue>(defaultValue);
   return (
@@ -66,7 +67,7 @@ export function AccessSelect({ defaultValue = "FREE", name = "access" }: { defau
   );
 }
 
-/** Square image picker with preview; posts as `name`. Sets `${removeName}=true` when cleared. */
+// Square image picker with preview; posts as `name`. Sets `${removeName}=true` when cleared.
 export function ImagePicker({
   name,
   removeName,
@@ -134,10 +135,8 @@ export function ImagePicker({
   );
 }
 
-/**
- * Sends a request, shows errors, refreshes server data on success.
- * `send` returns the fetch promise; the hook handles JSON errors.
- */
+// Sends a request, shows errors, refreshes server data on success.
+// `send` returns the fetch promise; the hook handles JSON errors.
 export function useAdminAction() {
   const router = useRouter();
   const [busy, setBusy] = React.useState(false);
@@ -178,7 +177,7 @@ export function FormError({ error }: { error: string | null }) {
   );
 }
 
-/** Wide modal used for create/edit forms. */
+// Wide modal used for create/edit forms.
 export function EditorDialog({
   open,
   onOpenChange,
@@ -225,4 +224,102 @@ export function PageHeader({ title, description, action }: { title: string; desc
       {action}
     </div>
   );
+}
+
+// ------------------------------------------------------------------
+// Phase C: language, release scheduling
+// ------------------------------------------------------------------
+
+export function LanguageSelect({ defaultValue, name = "language" }: { defaultValue?: string | null; name?: string }) {
+  return (
+    <Field label="Language">
+      <select name={name} defaultValue={defaultValue ?? ""} className={inputClass}>
+        <option value="">Not set</option>
+        {LANGUAGES.map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+}
+
+// "2026-11-23T10:00:00Z" -> "2026-11-23T15:30" in the admin's local time (datetime-local value).
+const toLocalInput = (iso?: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+
+export type PublishMode = "now" | "draft" | "schedule";
+
+export function initialPublishMode(isActive: boolean, publishAt?: string | null): PublishMode {
+  if (!isActive) return "draft";
+  return publishAt && new Date(publishAt).getTime() > Date.now() ? "schedule" : "now";
+}
+
+// Publish now / Save as draft / Schedule. Posts hidden fields
+// `publishMode` and `publishAt` (ISO, UTC) for the admin APIs.
+export function PublishControl({ defaultMode = "now", defaultAt }: { defaultMode?: PublishMode; defaultAt?: string | null }) {
+  const [mode, setMode] = React.useState<PublishMode>(defaultMode);
+  const [local, setLocal] = React.useState(toLocalInput(defaultAt));
+  const iso = local ? new Date(local).toISOString() : "";
+  const options: { id: PublishMode; label: string }[] = [
+    { id: "now", label: "Publish now" },
+    { id: "draft", label: "Save as draft" },
+    { id: "schedule", label: "Schedule" },
+  ];
+  return (
+    <div className="space-y-1.5 text-sm">
+      <span className="font-medium">Release</span>
+      <div role="radiogroup" className="grid grid-cols-3 gap-1 rounded-lg border border-input p-1">
+        {options.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            role="radio"
+            aria-checked={mode === o.id}
+            onClick={() => setMode(o.id)}
+            className={cn(
+              "h-8 rounded-md text-sm transition-colors",
+              mode === o.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted",
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      {mode === "schedule" && (
+        <input
+          type="datetime-local"
+          value={local}
+          min={toLocalInput(new Date(Date.now() + 60_000).toISOString())}
+          onChange={(e) => setLocal(e.target.value)}
+          required
+          aria-label="Release date and time"
+          className={inputClass}
+        />
+      )}
+      <span className="block text-xs text-muted-foreground">
+        {mode === "now" && "Visible to listeners immediately."}
+        {mode === "draft" && "Hidden from listeners until you publish it."}
+        {mode === "schedule" && (local ? `Goes live automatically on ${new Date(local).toLocaleString("en-IN")}.` : "Pick when it goes live.")}
+      </span>
+      <input type="hidden" name="publishMode" value={mode} />
+      <input type="hidden" name="publishAt" value={mode === "schedule" ? iso : ""} />
+    </div>
+  );
+}
+
+export function StatusBadge({ isActive, publishAt }: { isActive: boolean; publishAt?: string | null }) {
+  const scheduled = isActive && publishAt && new Date(publishAt).getTime() > Date.now();
+  if (!isActive) return <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">Draft</span>;
+  if (scheduled)
+    return (
+      <span className="inline-block rounded-full bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-inset ring-sky-200" title={new Date(publishAt!).toLocaleString("en-IN")}>
+        Scheduled · {new Date(publishAt!).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+      </span>
+    );
+  return <span className="inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Live</span>;
 }

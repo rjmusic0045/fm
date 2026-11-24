@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Pull the cord, turn on the light and sign in to Lumen FM.",
 };
 
-/** Maps auth error codes in the URL (e.g. from OAuth redirects) to friendly copy. */
+// Maps auth error codes in the URL (e.g. from OAuth redirects) to friendly copy.
 const errorMessages: Record<string, string> = {
   OAuthAccountNotLinked: "That email is already registered with a password. Sign in with email instead.",
   AccessDenied: "Access was denied. Please try again.",

@@ -5,7 +5,7 @@ import { AudioEngine } from "@/components/player/audio-engine";
 import { PreviewGate } from "@/components/player/preview-gate";
 import { AccountNotices } from "@/components/providers/account-notices";
 
-/** True only for a live session that still carries a user id (expired remember-me sessions don't). */
+// True only for a live session that still carries a user id (expired remember-me sessions don't).
 export function useIsSignedIn() {
   const { data, status } = useSession();
   return status === "authenticated" && Boolean(data?.user?.id);

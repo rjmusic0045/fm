@@ -1,17 +1,15 @@
 import { cn } from "@/lib/utils";
 
 interface VisualizerProps {
-  /** Animate bars; when false bars rest at a low height. */
+  // Animate bars; when false bars rest at a low height.
   playing?: boolean;
   bars?: number;
   className?: string;
   barClassName?: string;
 }
 
-/**
- * Lightweight CSS equalizer. Pure transform animation (GPU-composited)
- * so it stays at 60fps even with many instances on screen.
- */
+// Lightweight CSS equalizer. Pure transform animation (GPU-composited)
+// so it stays at 60fps even with many instances on screen.
 export function Visualizer({ playing = true, bars = 4, className, barClassName }: VisualizerProps) {
   return (
     <span

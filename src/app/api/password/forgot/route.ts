@@ -8,10 +8,8 @@ import { isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/api";
 
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-/**
- * Starts a password reset. Always answers with the same generic success so
- * the endpoint can't be used to discover which emails are registered.
- */
+// Starts a password reset. Always answers with the same generic success so
+// the endpoint can't be used to discover which emails are registered.
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
 

@@ -12,6 +12,9 @@ import {
   Field,
   FormError,
   ImagePicker,
+  LanguageSelect,
+  PublishControl,
+  StatusBadge,
   inputClass,
   textareaClass,
   useAdminAction,
@@ -29,6 +32,9 @@ export interface EpisodeRow {
   plays: number;
   isActive: boolean;
   publishedAt: string;
+  season: number | null;
+  imageUrl: string | null;
+  publishAt: string | null;
 }
 
 export interface PodcastRow {
@@ -42,6 +48,7 @@ export interface PodcastRow {
   access: AccessValue;
   isActive: boolean;
   artistId: string | null;
+  language: string | null;
   episodes: EpisodeRow[];
 }
 
@@ -106,6 +113,7 @@ function PodcastForm({ podcast, artists, onClose }: { podcast?: PodcastRow; arti
           <Field label="Description">
             <textarea name="description" maxLength={4000} defaultValue={podcast?.description} className={textareaClass} />
           </Field>
+          <LanguageSelect defaultValue={podcast?.language} />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -129,6 +137,7 @@ function PodcastForm({ podcast, artists, onClose }: { podcast?: PodcastRow; arti
 }
 
 function EpisodeUpload({ podcastId, nextNumber }: { podcastId: string; nextNumber: number }) {
+  const [resetKey, setResetKey] = React.useState(0);
   const { run, busy, error, setError } = useAdminAction();
   const formRef = React.useRef<HTMLFormElement>(null);
   const [file, setFile] = React.useState<File | null>(null);
@@ -146,6 +155,7 @@ function EpisodeUpload({ podcastId, nextNumber }: { podcastId: string; nextNumbe
         formRef.current?.reset();
         setFile(null);
         setDuration(0);
+        setResetKey((k) => k + 1);
       },
     );
   };
@@ -153,7 +163,7 @@ function EpisodeUpload({ podcastId, nextNumber }: { podcastId: string; nextNumbe
   return (
     <form ref={formRef} onSubmit={onSubmit} className="space-y-3 rounded-lg border border-dashed border-border p-3">
       <p className="text-sm font-medium">Upload episode {nextNumber}</p>
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_90px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_80px_80px]">
         <input name="title" required maxLength={160} placeholder="Episode title" aria-label="Episode title" className={inputClass} />
         <label className={cn(inputClass, "flex cursor-pointer items-center gap-2 truncate text-muted-foreground")}>
           <Music2 className="size-4 shrink-0" aria-hidden />
@@ -169,7 +179,15 @@ function EpisodeUpload({ podcastId, nextNumber }: { podcastId: string; nextNumbe
             }}
           />
         </label>
+        <input name="season" type="number" min={1} placeholder="Season" aria-label="Season (optional)" className={inputClass} />
         <input name="episodeNumber" type="number" min={1} defaultValue={nextNumber} aria-label="Episode number" className={inputClass} />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+        <PublishControl key={`pub-${resetKey}`} />
+        <label className="space-y-1.5 text-sm">
+          <span className="font-medium">Artwork</span>
+          <input key={`img-${resetKey}`} type="file" name="image" accept="image/jpeg,image/png,image/webp" className="block w-full text-xs" />
+        </label>
       </div>
       <textarea name="description" maxLength={4000} placeholder="Show notes (optional)" aria-label="Episode description" className={textareaClass} />
       <FormError error={error} />
@@ -186,8 +204,15 @@ function EpisodeItem({ ep }: { ep: EpisodeRow }) {
   const { run, busy } = useAdminAction();
   return (
     <li className={cn("flex items-center gap-3 border-t border-border py-2 text-sm", !ep.isActive && "opacity-60")}>
-      <span className="w-8 text-right text-xs tabular-nums text-muted-foreground">#{ep.episodeNumber}</span>
+      <span className="w-14 text-right text-xs tabular-nums text-muted-foreground">
+        {ep.season ? `S${ep.season} ` : ""}E{ep.episodeNumber}
+      </span>
+      {ep.imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={ep.imageUrl} alt="" className="size-8 shrink-0 rounded object-cover" />
+      )}
       <span className="min-w-0 flex-1 truncate font-medium">{ep.title}</span>
+      <StatusBadge isActive={ep.isActive} publishAt={ep.publishAt} />
       <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">{ep.duration ? formatDuration(ep.duration) : "–"}</span>
       <span className="inline-flex w-16 items-center justify-end gap-1 text-xs tabular-nums text-muted-foreground">
         <Headphones className="size-3" aria-hidden /> {ep.plays}
@@ -262,7 +287,7 @@ function PodcastCard({ podcast, onEdit }: { podcast: PodcastRow; onEdit: () => v
         <div className="mt-3 space-y-3">
           <ul>
             {[...podcast.episodes]
-              .sort((a, b) => b.episodeNumber - a.episodeNumber)
+              .sort((a, b) => (b.season ?? 0) - (a.season ?? 0) || b.episodeNumber - a.episodeNumber)
               .map((ep) => (
                 <EpisodeItem key={ep.id} ep={ep} />
               ))}

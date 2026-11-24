@@ -17,9 +17,9 @@ import { Logo } from "@/components/brand/logo";
 import { playBulbHum, playSwitchClick } from "@/lib/sounds";
 import { cn } from "@/lib/utils";
 
-/* ------------------------------------------------------------------------- */
-/* Geometry (px). The floor lamp SVG is drawn at its native 260×580 size.     */
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
+// Geometry (px). The floor lamp SVG is drawn at its native 260×580 size.
+// -------------------------------------------------------------------------
 const LAMP_W = 260;
 const LAMP_H = 580;
 const SHADE_CX = 130; // shade centre x
@@ -32,7 +32,7 @@ const PULL_THRESHOLD = 70; // drag distance that toggles the light
 const MAX_PULL = 120;
 const HINT_KEY = "lumen:lamp-pulled";
 
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
 
 const SHADE_PATH = `M82 34 L178 34 L232 ${SHADE_BOTTOM} L28 ${SHADE_BOTTOM} Z`;
 
@@ -98,7 +98,7 @@ function FloorLampSvg({ intensity }: { intensity: MotionValue<number> }) {
   );
 }
 
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
 
 interface PullCordProps {
   lit: boolean;
@@ -137,7 +137,7 @@ function PullCord({ lit, onPull, showHint }: PullCordProps) {
     springBack();
   };
 
-  /** Click / Enter / Space: play a short pull animation, then toggle. */
+  // Click / Enter / Space: play a short pull animation, then toggle.
   const keyboardPull = async () => {
     if (draggedRef.current) {
       draggedRef.current = false;
@@ -225,7 +225,7 @@ function PullCord({ lit, onPull, showHint }: PullCordProps) {
   );
 }
 
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
 
 const dust = Array.from({ length: 12 }, (_, i) => ({
   left: 34 + ((i * 37) % 32),
@@ -235,7 +235,7 @@ const dust = Array.from({ length: 12 }, (_, i) => ({
   duration: 6 + (i % 5),
 }));
 
-/** Light falling from the shade to the floor, plus the warm wash over the room. */
+// Light falling from the shade to the floor, plus the warm wash over the room.
 function LampLight({ intensity }: { intensity: MotionValue<number> }) {
   const coneW = 640;
   const coneH = FLOOR_Y - SHADE_BOTTOM;
@@ -293,24 +293,22 @@ function LampLight({ intensity }: { intensity: MotionValue<number> }) {
   );
 }
 
-/* ------------------------------------------------------------------------- */
+// -------------------------------------------------------------------------
 
 export interface LampSceneProps {
   children: React.ReactNode;
-  /** Start with the lamp already on (used by the reset/forgot pages). */
+  // Start with the lamp already on (used by the reset/forgot pages).
   initialLit?: boolean;
-  /** Accessible page title (visually hidden). */
+  // Accessible page title (visually hidden).
   title: string;
-  /** Called after every toggle. */
+  // Called after every toggle.
   onToggle?: (lit: boolean) => void;
   className?: string;
 }
 
-/**
- * The signature auth scene: a dark room with a standing floor lamp on the left.
- * Pull its cord (drag down, or click/Enter) to switch the light on and slide
- * the form in on the right.
- */
+// The signature auth scene: a dark room with a standing floor lamp on the left.
+// Pull its cord (drag down, or click/Enter) to switch the light on and slide
+// the form in on the right.
 export function LampScene({ children, initialLit = false, title, onToggle, className }: LampSceneProps) {
   const reduce = useReducedMotion();
   const [lit, setLit] = React.useState(initialLit);
@@ -359,7 +357,7 @@ export function LampScene({ children, initialLit = false, title, onToggle, class
       try {
         window.localStorage.setItem(HINT_KEY, "1");
       } catch {
-        /* storage unavailable (private mode): ignore */
+        // storage unavailable (private mode): ignore
       }
     },
     [intensity, reduce, onToggle],

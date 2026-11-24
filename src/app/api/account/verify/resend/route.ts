@@ -4,7 +4,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { issueVerificationEmail } from "@/lib/verification";
 import { isSameOrigin, jsonError, jsonOk } from "@/lib/api";
 
-/** Re-sends the verification email to the signed-in user. */
+// Re-sends the verification email to the signed-in user.
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   const session = await getSession();

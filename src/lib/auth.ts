@@ -214,14 +214,14 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
-/** Issues a new device session id and makes it the account's only active one. */
+// Issues a new device session id and makes it the account's only active one.
 async function startDeviceSession(userId: string): Promise<string> {
   const sid = randomUUID();
   await prisma.user.update({ where: { id: userId }, data: { activeSessionId: sid, lastSeenAt: new Date() } });
   return sid;
 }
 
-/** Server-side session helper. Treats sessions past their remember-me expiry as signed out. */
+// Server-side session helper. Treats sessions past their remember-me expiry as signed out.
 export async function getSession() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return null;

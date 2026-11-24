@@ -10,11 +10,11 @@ const schema = z.object({
   favoriteGenres: z.array(z.enum(GENRES)).max(GENRES.length).optional(),
   preferredLanguages: z.array(z.enum(LANGUAGES)).max(LANGUAGES.length).optional(),
   audioQuality: z.enum(["LOW", "NORMAL", "HIGH"]).optional(),
-  /** Marks onboarding as done. */
+  // Marks onboarding as done.
   completeOnboarding: z.literal(true).optional(),
 });
 
-/** Current user's profile and preferences. */
+// Current user's profile and preferences.
 export async function GET() {
   const session = await getSession();
   if (!session) return jsonError(401, "UNAUTHENTICATED", "Sign in first.");
@@ -26,7 +26,7 @@ export async function GET() {
   return jsonOk({ user });
 }
 
-/** Updates the signed-in user's profile/preferences (any subset of fields). */
+// Updates the signed-in user's profile/preferences (any subset of fields).
 export async function PATCH(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   const session = await getSession();

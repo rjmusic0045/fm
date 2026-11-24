@@ -39,6 +39,9 @@ export default async function AdminAlbumsPage() {
           artistId: a.artistId,
           artistName: a.artist?.name ?? null,
           songIds: a.songs.map((s) => s.id),
+          language: a.language,
+          releaseDate: a.releaseDate?.toISOString() ?? null,
+          publishAt: a.publishAt?.toISOString() ?? null,
         }))}
         artists={artists}
         songs={songs}

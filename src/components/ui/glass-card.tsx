@@ -5,17 +5,15 @@ import { motion, type HTMLMotionProps, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export interface GlassCardProps extends HTMLMotionProps<"div"> {
-  /** Lift + glow on hover. */
+  // Lift + glow on hover.
   interactive?: boolean;
-  /** Gradient hairline border. */
+  // Gradient hairline border.
   gradientBorder?: boolean;
   strong?: boolean;
 }
 
-/**
- * Frosted glass surface. Tracks the pointer to paint a soft spotlight
- * (CSS vars --mx/--my) for a premium hover feel.
- */
+// Frosted glass surface. Tracks the pointer to paint a soft spotlight
+// (CSS vars --mx/--my) for a premium hover feel.
 export const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
   ({ className, interactive = false, gradientBorder = false, strong = false, children, onPointerMove, ...props }, ref) => {
     const reduce = useReducedMotion();

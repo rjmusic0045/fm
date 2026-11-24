@@ -50,7 +50,7 @@ export interface ButtonProps
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
-  /** Disable the click ripple (e.g. for icon-only toolbars). */
+  // Disable the click ripple (e.g. for icon-only toolbars).
   noRipple?: boolean;
 }
 

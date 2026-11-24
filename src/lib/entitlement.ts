@@ -7,11 +7,11 @@ export type SubscriptionState = "none" | "active" | "expired";
 export interface Entitlement {
   plan: Plan;
   state: SubscriptionState;
-  /** ISO date the current/last paid period ends (null = open-ended or none). */
+  // ISO date the current/last paid period ends (null = open-ended or none).
   periodEnd: string | null;
-  /** Whole days left in the period (active only). */
+  // Whole days left in the period (active only).
   daysLeft: number | null;
-  /** May stream PREMIUM items in full. Admins always can. */
+  // May stream PREMIUM items in full. Admins always can.
   canPlayPremium: boolean;
 }
 
@@ -19,7 +19,7 @@ const DAY = 24 * 60 * 60 * 1000;
 
 export const FREE_ENTITLEMENT: Entitlement = { plan: "FREE", state: "none", periodEnd: null, daysLeft: null, canPlayPremium: false };
 
-/** Works out what a user may play from their Subscription row. */
+// Works out what a user may play from their Subscription row.
 export async function getEntitlement(userId: string | null | undefined, role?: Role): Promise<Entitlement> {
   if (!userId) return FREE_ENTITLEMENT;
   const sub = await prisma.subscription.findUnique({

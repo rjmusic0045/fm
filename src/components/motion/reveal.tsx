@@ -7,12 +7,12 @@ interface RevealProps {
   children: React.ReactNode;
   className?: string;
   delay?: number;
-  /** Vertical offset in px the element slides up from. */
+  // Vertical offset in px the element slides up from.
   y?: number;
   as?: "div" | "section" | "li" | "article";
 }
 
-/** Fades + slides children in once when they scroll into view. */
+// Fades + slides children in once when they scroll into view.
 export function Reveal({ children, className, delay = 0, y = 24, as = "div" }: RevealProps) {
   const reduce = useReducedMotion();
   const Comp = motion[as];

@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 
-/** Parses the "songIds" form field: a JSON array of song ids in track order. */
+// Parses the "songIds" form field: a JSON array of song ids in track order.
 export function parseSongIds(raw: string | undefined): string[] | undefined {
   if (raw === undefined) return undefined;
   try {
@@ -13,10 +13,8 @@ export function parseSongIds(raw: string | undefined): string[] | undefined {
   }
 }
 
-/**
- * Makes `songIds` (in order) the album's tracklist: numbers them 1..n, sets
- * their album display name, and detaches songs no longer listed.
- */
+// Makes `songIds` (in order) the album's tracklist: numbers them 1..n, sets
+// their album display name, and detaches songs no longer listed.
 export async function setAlbumTracks(albumId: string, albumTitle: string, songIds: string[]) {
   await prisma.song.updateMany({
     where: { albumId, id: { notIn: songIds } },

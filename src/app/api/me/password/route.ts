@@ -6,10 +6,8 @@ import { hashPassword, verifyPassword } from "@/lib/tokens";
 import { passwordSchema } from "@/lib/validations/auth";
 import { isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/api";
 
-/**
- * Changes (or, for Facebook-only accounts, sets) the signed-in user's password.
- * Body: { currentPassword?: string, newPassword: string }
- */
+// Changes (or, for Facebook-only accounts, sets) the signed-in user's password.
+// Body: { currentPassword?: string, newPassword: string }
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   const session = await getSession();

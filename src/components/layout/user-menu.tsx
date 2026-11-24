@@ -22,7 +22,7 @@ export function accountLinks(isAdmin: boolean) {
   ];
 }
 
-/** Avatar button + dropdown for signed-in users (desktop navbar). */
+// Avatar button + dropdown for signed-in users (desktop navbar).
 export function UserMenu() {
   const { data } = useSession();
   const [open, setOpen] = React.useState(false);

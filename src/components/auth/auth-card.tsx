@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Warm-lit glass card, lit from the floor lamp on its left. */
+// Warm-lit glass card, lit from the floor lamp on its left.
 export function AuthCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div

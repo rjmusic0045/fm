@@ -1,4 +1,5 @@
 import "server-only";
+import { released } from "@/lib/release";
 import type { Song } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { songStats } from "@/lib/admin";
@@ -30,16 +31,19 @@ export function toDTO(
     artistId: s.artistId,
     albumId: s.albumId,
     trackNumber: s.trackNumber,
+    language: s.language,
+    releaseDate: s.releaseDate?.toISOString() ?? null,
+    publishAt: s.publishAt?.toISOString() ?? null,
   };
 }
 
-/** Songs with stats. `userId` marks which ones that user has liked. */
+// Songs with stats. `userId` marks which ones that user has liked.
 export async function listSongs(
   opts: { includeInactive?: boolean; userId?: string; artistId?: string; albumId?: string } = {},
 ): Promise<SongDTO[]> {
   const songs = await prisma.song.findMany({
     where: {
-      ...(opts.includeInactive ? {} : { isActive: true }),
+      ...(opts.includeInactive ? {} : { isActive: true, ...released() }),
       ...(opts.artistId ? { artistId: opts.artistId } : {}),
       ...(opts.albumId ? { albumId: opts.albumId } : {}),
     },

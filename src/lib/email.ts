@@ -2,11 +2,9 @@ import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { siteConfig } from "@/config/site";
 
-/**
- * Email delivery via SMTP (works with Resend, SendGrid, Postmark, Gmail, Mailtrap...).
- * Set EMAIL_SERVER (smtp URL) and EMAIL_FROM. Without them, emails are printed
- * to the server console so the flows still work in local development.
- */
+// Email delivery via SMTP (works with Resend, SendGrid, Postmark, Gmail, Mailtrap...).
+// Set EMAIL_SERVER (smtp URL) and EMAIL_FROM. Without them, emails are printed
+// to the server console so the flows still work in local development.
 let transporter: Transporter | null = null;
 
 function getTransport(): Transporter | null {
@@ -46,7 +44,7 @@ export const appUrl = () => (process.env.NEXTAUTH_URL?.trim() || process.env.NEX
 const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-/** Branded, table-based layout that renders in every major mail client. */
+// Branded, table-based layout that renders in every major mail client.
 function layout({ heading, body, cta, url, footnote }: { heading: string; body: string; cta: string; url: string; footnote: string }) {
   return `<!doctype html><html><body style="margin:0;background:#0A0A12;font-family:Inter,Segoe UI,Arial,sans-serif;color:#E8E8F0">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0A0A12;padding:40px 16px"><tr><td align="center">

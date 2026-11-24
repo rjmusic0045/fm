@@ -6,7 +6,7 @@ import { deleteUpload } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
-/** Admin: edit an artist (multipart; any of name, bio, city, verified, image, removeImage). */
+// Admin: edit an artist (multipart; any of name, bio, city, verified, image, removeImage).
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");
@@ -40,7 +40,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return jsonOk({ artist });
 }
 
-/** Admin: delete an artist. Their songs/albums/podcasts stay, just unlinked. */
+// Admin: delete an artist. Their songs/albums/podcasts stay, just unlinked.
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");

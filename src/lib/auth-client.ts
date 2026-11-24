@@ -13,7 +13,7 @@ export async function signInWithCredentials(input: {
   password: string;
   remember: boolean;
   callbackUrl?: string;
-  /** Sign out the other device that is using this account. */
+  // Sign out the other device that is using this account.
   force?: boolean;
 }): Promise<AuthResult> {
   try {
@@ -36,7 +36,7 @@ export async function signInWithCredentials(input: {
   }
 }
 
-/** Redirects to Facebook. Only resolves (with an error) if the redirect can't start. */
+// Redirects to Facebook. Only resolves (with an error) if the redirect can't start.
 export async function signInWithFacebook(enabled: boolean, callbackUrl?: string): Promise<AuthResult> {
   if (!enabled) {
     return {

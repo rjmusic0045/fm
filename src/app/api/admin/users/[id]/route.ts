@@ -6,24 +6,22 @@ import { isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/api";
 const DAY = 24 * 60 * 60 * 1000;
 
 const bodySchema = z.discriminatedUnion("action", [
-  /** Grant or renew a paid plan for N days from today (or from the current end, if still active). */
+  // Grant or renew a paid plan for N days from today (or from the current end, if still active).
   z.object({ action: z.literal("grant"), plan: z.enum(["PREMIUM", "FAMILY"]), days: z.number().int().min(1).max(3660) }),
-  /** End the plan now (keeps the record so the user sees the "plan ended" notice). */
+  // End the plan now (keeps the record so the user sees the "plan ended" notice).
   z.object({ action: z.literal("expire") }),
-  /** Remove the plan entirely (back to Free, no notice). */
+  // Remove the plan entirely (back to Free, no notice).
   z.object({ action: z.literal("remove") }),
-  /** Sign the user out of every device. */
+  // Sign the user out of every device.
   z.object({ action: z.literal("signout") }),
   z.object({ action: z.literal("role"), role: z.enum(["USER", "ADMIN"]) }),
-  /** Deactivate (blocks sign-in, ends sessions) or reactivate an account. */
+  // Deactivate (blocks sign-in, ends sessions) or reactivate an account.
   z.object({ action: z.literal("disable") }),
   z.object({ action: z.literal("enable") }),
 ]);
 
-/**
- * Admin: manage a user's plan and sessions (no payment gateway yet, so
- * admins grant/renew subscriptions by hand).
- */
+// Admin: manage a user's plan and sessions (no payment gateway yet, so
+// admins grant/renew subscriptions by hand).
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   const admin = await getAdminSession();

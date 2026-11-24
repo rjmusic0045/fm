@@ -9,15 +9,13 @@ export interface FloatingInputProps extends Omit<React.InputHTMLAttributes<HTMLI
   label: string;
   error?: string;
   icon?: React.ReactNode;
-  /** Adds a show/hide toggle for password fields. */
+  // Adds a show/hide toggle for password fields.
   revealable?: boolean;
   hint?: React.ReactNode;
 }
 
-/**
- * Input with a floating label (pure CSS via :placeholder-shown), inline error
- * and optional password reveal toggle. Fully labelled for screen readers.
- */
+// Input with a floating label (pure CSS via :placeholder-shown), inline error
+// and optional password reveal toggle. Fully labelled for screen readers.
 export const FloatingInput = React.forwardRef<HTMLInputElement, FloatingInputProps>(
   ({ label, error, icon, revealable, hint, className, id, type = "text", ...props }, ref) => {
     const autoId = React.useId();

@@ -5,11 +5,9 @@ import { signupSchema, fieldErrors } from "@/lib/validations/auth";
 import { issueVerificationEmail } from "@/lib/verification";
 import { isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/api";
 
-/**
- * Creates an email/password account. The client signs in right after and is
- * routed to onboarding (User.onboarded = false). A verification email is sent,
- * but signing in does not wait for it.
- */
+// Creates an email/password account. The client signs in right after and is
+// routed to onboarding (User.onboarded = false). A verification email is sent,
+// but signing in does not wait for it.
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
 

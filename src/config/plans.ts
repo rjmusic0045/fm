@@ -4,7 +4,7 @@ export interface Plan {
   id: PlanId;
   name: string;
   tagline: string;
-  /** Monthly prices; yearly = monthly * 12 * 0.8 */
+  // Monthly prices; yearly = monthly * 12 * 0.8
   price: { inr: number; usd: number };
   features: string[];
   highlighted?: boolean;

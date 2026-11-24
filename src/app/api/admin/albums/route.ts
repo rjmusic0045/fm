@@ -1,16 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin";
 import { isSameOrigin, jsonError, jsonOk } from "@/lib/api";
-import { albumSchema, boolField, field, randomPalette, readForm, readImage, refField, uniqueSlug } from "@/lib/admin-forms";
+import { albumSchema, boolField, dateField, field, isFieldError, languageField, publishFields, randomPalette, readForm, readImage, refField, uniqueSlug } from "@/lib/admin-forms";
 import { parseSongIds, setAlbumTracks } from "@/lib/album-tracks";
 import { deleteUpload } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
-/**
- * Admin: create an album.
- * Multipart: title, artistId?, description?, genre?, releaseYear?, access?, isActive?, cover?, songIds? (JSON array, in order)
- */
+// Admin: create an album.
+// Multipart: title, artistId?, description?, genre?, releaseYear?, access?, isActive?, cover?, songIds? (JSON array, in order)
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");
@@ -30,6 +28,10 @@ export async function POST(req: Request) {
   if (artistId && !(await prisma.artist.count({ where: { id: artistId } }))) {
     return jsonError(400, "INVALID_INPUT", "Choose an existing artist.");
   }
+  const language = languageField(form);
+  const releaseDate = dateField(form, "releaseDate");
+  const pub = publishFields(form);
+  for (const v of [language, releaseDate, pub]) if (isFieldError(v)) return jsonError(400, "INVALID_INPUT", v.error);
   const cover = await readImage(form, "cover");
   if (cover.error) return cover.error;
 
@@ -44,6 +46,10 @@ export async function POST(req: Request) {
         coverFrom,
         coverTo,
         isActive: boolField(form, "isActive") ?? true,
+        language: (language as string | null | undefined) ?? null,
+        releaseDate: (releaseDate as Date | null | undefined) ?? null,
+        ...(releaseDate instanceof Date ? { releaseYear: releaseDate.getUTCFullYear() } : {}),
+        ...((pub as { isActive: boolean; publishAt: Date | null } | undefined) ?? {}),
       },
     });
     const songIds = parseSongIds(field(form, "songIds"));

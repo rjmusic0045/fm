@@ -7,16 +7,14 @@ interface CoverArtProps {
   palette: Palette;
   kind?: "song" | "station";
   className?: string;
-  /** Show the big monogram (hide for tiny thumbnails). */
+  // Show the big monogram (hide for tiny thumbnails).
   showLabel?: boolean;
-  /** Optional photo; drawn over the generative art (which shows while it loads). */
+  // Optional photo; drawn over the generative art (which shows while it loads).
   image?: string;
 }
 
-/**
- * Generative cover art: zero network requests, crisp at any size.
- * Two-colour mesh + concentric "sound wave" rings + monogram.
- */
+// Generative cover art: zero network requests, crisp at any size.
+// Two-colour mesh + concentric "sound wave" rings + monogram.
 export function CoverArt({ title, palette, kind = "song", className, showLabel = true, image }: CoverArtProps) {
   const [from, to] = palette;
   const initials = title

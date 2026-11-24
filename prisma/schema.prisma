@@ -188,26 +188,32 @@ model Station {
 }
 
 model Song {
-  id           String  @id @default(auto()) @map("_id") @db.ObjectId
-  slug         String  @unique
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  slug         String    @unique
   title        String
   artist       String
-  album        String  @default("Single")
-  genre        String  @default("Pop")
+  album        String    @default("Single")
+  genre        String    @default("Pop")
+  /// Content language (one of config/taxonomy LANGUAGES).
+  language     String?
+  /// Original release date (display/sorting).
+  releaseDate  DateTime?
+  /// Scheduled release: hidden from listeners until this time (null = immediately).
+  publishAt    DateTime?
   duration     Int // seconds
   audioUrl     String
   /// Uploaded cover image (served from /api/media/...). Falls back to the generated gradient.
   coverUrl     String?
-  coverFrom    String  @default("#7C3AED")
-  coverTo      String  @default("#EC4899")
+  coverFrom    String    @default("#7C3AED")
+  coverTo      String    @default("#EC4899")
   /// Counted plays (>= PLAY_COUNT_SECONDS listened), guests included.
-  plays        Int     @default(0)
+  plays        Int       @default(0)
   /// Admin who uploaded the track (null for seeded catalog songs).
-  uploadedById String? @db.ObjectId
-  access       Access  @default(FREE)
+  uploadedById String?   @db.ObjectId
+  access       Access    @default(FREE)
   /// Optional links to managed entities (artist/album strings above stay as display names).
-  artistId     String? @db.ObjectId
-  albumId      String? @db.ObjectId
+  artistId     String?   @db.ObjectId
+  albumId      String?   @db.ObjectId
   trackNumber  Int?
 
   artistRef Artist?  @relation(fields: [artistId], references: [id])
@@ -246,20 +252,24 @@ model Artist {
 }
 
 model Album {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  slug        String   @unique
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String    @unique
   title       String
-  description String   @default("")
-  genre       String   @default("Pop")
+  description String    @default("")
+  genre       String    @default("Pop")
   releaseYear Int?
+  releaseDate DateTime?
+  language    String?
+  /// Scheduled release: hidden from listeners until this time (null = immediately).
+  publishAt   DateTime?
   coverUrl    String?
-  coverFrom   String   @default("#4F46E5")
-  coverTo     String   @default("#EC4899")
-  access      Access   @default(FREE)
-  isActive    Boolean  @default(true)
-  artistId    String?  @db.ObjectId
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  coverFrom   String    @default("#4F46E5")
+  coverTo     String    @default("#EC4899")
+  access      Access    @default(FREE)
+  isActive    Boolean   @default(true)
+  artistId    String?   @db.ObjectId
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   artist Artist? @relation(fields: [artistId], references: [id])
   songs  Song[]
@@ -275,6 +285,7 @@ model Podcast {
   host        String   @default("")
   description String   @default("")
   category    String   @default("Talk")
+  language    String?
   coverUrl    String?
   coverFrom   String   @default("#0EA5E9")
   coverTo     String   @default("#4F46E5")
@@ -291,23 +302,30 @@ model Podcast {
 }
 
 model PodcastEpisode {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
-  podcastId     String   @db.ObjectId
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  podcastId     String    @db.ObjectId
   title         String
-  description   String   @default("")
+  description   String    @default("")
   episodeNumber Int
-  duration      Int      @default(0) // seconds
+  /// Optional season (null = no seasons).
+  season        Int?
+  /// Episode artwork (falls back to the show cover).
+  imageUrl      String?
+  /// Scheduled publication: hidden from listeners until this time (null = immediately).
+  publishAt     DateTime?
+  duration      Int       @default(0) // seconds
   audioUrl      String
-  plays         Int      @default(0)
-  isActive      Boolean  @default(true)
-  publishedAt   DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  plays         Int       @default(0)
+  isActive      Boolean   @default(true)
+  publishedAt   DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   podcast Podcast            @relation(fields: [podcastId], references: [id], onDelete: Cascade)
   history ListeningHistory[]
 
   @@index([podcastId, episodeNumber])
+  @@index([podcastId, season, episodeNumber])
 }
 
 /// Admin-editable subscription plans (prices shown on the Pricing page).

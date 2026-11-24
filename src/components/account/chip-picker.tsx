@@ -3,7 +3,7 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Multi-select chips (genres, languages). */
+// Multi-select chips (genres, languages).
 export function ChipPicker({
   options,
   value,

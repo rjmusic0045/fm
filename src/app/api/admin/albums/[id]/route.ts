@@ -1,13 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { getAdminSession, isObjectId } from "@/lib/admin";
 import { isSameOrigin, jsonError, jsonOk } from "@/lib/api";
-import { albumSchema, boolField, field, readForm, readImage, refField } from "@/lib/admin-forms";
+import { albumSchema, boolField, dateField, field, isFieldError, languageField, publishFields, readForm, readImage, refField } from "@/lib/admin-forms";
 import { parseSongIds, setAlbumTracks } from "@/lib/album-tracks";
 import { deleteUpload } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
-/** Admin: edit an album (multipart, any subset of the create fields; plus removeCover). */
+// Admin: edit an album (multipart, any subset of the create fields; plus removeCover).
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");
@@ -31,6 +31,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (artistRef && !(await prisma.artist.count({ where: { id: artistRef } }))) {
     return jsonError(400, "INVALID_INPUT", "Choose an existing artist.");
   }
+  const language = languageField(form);
+  const releaseDate = dateField(form, "releaseDate");
+  const pub = publishFields(form);
+  for (const v of [language, releaseDate, pub]) if (isFieldError(v)) return jsonError(400, "INVALID_INPUT", v.error);
   const cover = await readImage(form, "cover");
   if (cover.error) return cover.error;
   const coverUrl = cover.url ?? (boolField(form, "removeCover") ? null : existing.coverUrl);
@@ -42,6 +46,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       artistId: artistRef === undefined ? existing.artistId : artistRef,
       coverUrl,
       isActive: boolField(form, "isActive") ?? existing.isActive,
+      ...(language !== undefined ? { language: language as string | null } : {}),
+      ...(releaseDate !== undefined ? { releaseDate: releaseDate as Date | null } : {}),
+      ...(releaseDate instanceof Date ? { releaseYear: releaseDate.getUTCFullYear() } : {}),
+      ...((pub as { isActive: boolean; publishAt: Date | null } | undefined) ?? {}),
     },
   });
 
@@ -54,7 +62,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   return jsonOk({ album });
 }
 
-/** Admin: delete an album. Its songs are kept as singles. */
+// Admin: delete an album. Its songs are kept as singles.
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");

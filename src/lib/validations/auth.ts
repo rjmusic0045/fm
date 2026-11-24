@@ -21,7 +21,7 @@ export const loginSchema = z.object({
   // Don't leak password policy on login: just require something.
   password: z.string().min(1, "Password is required").max(128),
   remember: z.boolean().default(true),
-  /** Take over from a session active on another device. */
+  // Take over from a session active on another device.
   force: z.boolean().default(false),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -40,7 +40,7 @@ export const signupSchema = z
   });
 export type SignupInput = z.infer<typeof signupSchema>;
 
-/** Flattens a ZodError into { field: firstMessage }. */
+// Flattens a ZodError into { field: firstMessage }.
 export function fieldErrors<T extends string>(error: z.ZodError): Partial<Record<T, string>> {
   const out: Partial<Record<T, string>> = {};
   for (const issue of error.issues) {

@@ -1,12 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/admin";
 import { isSameOrigin, jsonError, jsonOk } from "@/lib/api";
-import { boolField, field, podcastSchema, randomPalette, readForm, readImage, refField, uniqueSlug } from "@/lib/admin-forms";
+import { boolField, field, podcastSchema, randomPalette, isFieldError, languageField, readForm, readImage, refField, uniqueSlug } from "@/lib/admin-forms";
 import { deleteUpload } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
-/** Admin: create a podcast show (multipart: title, host?, artistId?, description?, category?, access?, isActive?, cover?). */
+// Admin: create a podcast show (multipart: title, host?, artistId?, description?, category?, access?, isActive?, cover?).
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");
@@ -26,6 +26,8 @@ export async function POST(req: Request) {
   if (artistId && !(await prisma.artist.count({ where: { id: artistId } }))) {
     return jsonError(400, "INVALID_INPUT", "Choose an existing artist.");
   }
+  const language = languageField(form);
+  if (isFieldError(language)) return jsonError(400, "INVALID_INPUT", language.error);
   const cover = await readImage(form, "cover");
   if (cover.error) return cover.error;
 
@@ -40,6 +42,7 @@ export async function POST(req: Request) {
         coverFrom,
         coverTo,
         isActive: boolField(form, "isActive") ?? true,
+        language: language ?? null,
       },
     });
     return jsonOk({ podcast }, { status: 201 });

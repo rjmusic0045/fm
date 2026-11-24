@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
-/** Re-mounts on every navigation inside the group: gives a soft page transition. */
+// Re-mounts on every navigation inside the group: gives a soft page transition.
 export default function MarketingTemplate({ children }: { children: React.ReactNode }) {
   const reduce = useReducedMotion();
   return (

@@ -3,10 +3,8 @@ import type { Plan as PlanEnum } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { plans as defaultPlans, type Plan } from "@/config/plans";
 
-/**
- * Subscription plans for the Pricing page and admin. Stored in PlanConfig so
- * admins can edit prices; seeded from config/plans.ts on first use.
- */
+// Subscription plans for the Pricing page and admin. Stored in PlanConfig so
+// admins can edit prices; seeded from config/plans.ts on first use.
 export async function getPlans(): Promise<Plan[]> {
   try {
     let rows = await prisma.planConfig.findMany({ orderBy: { sortOrder: "asc" } });
@@ -30,7 +28,7 @@ export async function getPlans(): Promise<Plan[]> {
   }
 }
 
-/** Creates any missing PlanConfig rows from the built-in defaults (never overwrites edits). */
+// Creates any missing PlanConfig rows from the built-in defaults (never overwrites edits).
 export async function ensurePlanRows() {
   await Promise.all(
     defaultPlans.map((p, i) =>

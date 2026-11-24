@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, ImagePlus, Music2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn, formatDuration } from "@/lib/utils";
-import { AccessSelect } from "@/components/admin/kit";
+import { AccessSelect, Field, LanguageSelect, PublishControl } from "@/components/admin/kit";
 
 export interface Option {
   id: string;
@@ -17,7 +17,7 @@ const GENRES = ["Pop", "Indie Pop", "Lo-fi", "Hip-Hop", "Electronic", "Rock", "J
 const inputClass =
   "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-primary focus:ring-2 focus:ring-primary/15";
 
-/** Reads duration (seconds) from an audio file in the browser. */
+// Reads duration (seconds) from an audio file in the browser.
 function readDuration(file: File): Promise<number> {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
@@ -100,7 +100,7 @@ export function UploadForm({ artists = [], albums = [] }: { artists?: Option[]; 
       try {
         body = JSON.parse(xhr.responseText);
       } catch {
-        /* non-JSON error page */
+        // non-JSON error page
       }
       if (xhr.status >= 200 && xhr.status < 300 && body.ok) {
         setDone(`“${body.song?.title}” is live.`);
@@ -235,7 +235,14 @@ export function UploadForm({ artists = [], albums = [] }: { artists?: Option[]; 
               </datalist>
             </label>
           </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <LanguageSelect key={`lang-${resetKey}`} />
+            <Field label="Release date">
+              <input key={`rd-${resetKey}`} type="date" name="releaseDate" className={inputClass} />
+            </Field>
+          </div>
           <AccessSelect key={resetKey} />
+          <PublishControl key={`pub-${resetKey}`} />
         </div>
       </div>
 

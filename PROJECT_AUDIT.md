@@ -202,6 +202,7 @@ The global player is mounted once in the root layout: `AudioEngine` holds a sing
 5. **Static demo data** (`data/catalog.ts`, `data/artist.ts`) still powers the home page stations and songs and the `/artist` page. The brief rules out mock data in production features, so these should switch to the database.
 6. **Pricing page promises** (ads, 6 skips per hour, 320 kbps, offline downloads) that aren't implemented.
 7. The play counter is rate-limited per listener, but guest plays are keyed by IP address, so users behind the same network share a limit.
+8. **Fixed in Phase C:** on Azure, `X-Forwarded-For` includes the client port (`1.2.3.4:56789`). Every connection got its own rate-limit bucket, so **IP rate limiting (login, signup, password reset, guest plays) was ineffective in production**. `clientIp()` now strips the port.
 
 ---
 

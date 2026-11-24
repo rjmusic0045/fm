@@ -4,7 +4,7 @@ import { jsonOk } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-/** The signed-in user's plan state (guests get the free entitlement). */
+// The signed-in user's plan state (guests get the free entitlement).
 export async function GET() {
   const session = await getSession();
   const entitlement = session ? await getEntitlement(session.user.id, session.user.role) : FREE_ENTITLEMENT;

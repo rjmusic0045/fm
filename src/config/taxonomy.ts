@@ -1,4 +1,4 @@
-/** Choices offered at onboarding and in settings (stored as plain strings on the user). */
+// Choices offered at onboarding and in settings (stored as plain strings on the user).
 
 export const GENRES = [
   "Pop",

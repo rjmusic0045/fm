@@ -7,11 +7,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Visualizer } from "@/components/audio/visualizer";
 import { GUEST_PREVIEW_SECONDS, useCurrentItem, usePlayer } from "@/stores/player-store";
 
-/**
- * Soft paywall shown when a preview runs out:
- *  - guests: sign in / create an account
- *  - signed-in listeners on a PREMIUM item without an active plan: upgrade
- */
+// Soft paywall shown when a preview runs out:
+// - guests: sign in / create an account
+// - signed-in listeners on a PREMIUM item without an active plan: upgrade
 export function PreviewGate() {
   const open = usePlayer((s) => s.gateOpen);
   const reason = usePlayer((s) => s.gateReason);

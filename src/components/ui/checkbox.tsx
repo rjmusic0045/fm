@@ -9,7 +9,7 @@ export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputE
   error?: string;
 }
 
-/** Native checkbox (keyboard + form friendly) with a custom animated box. */
+// Native checkbox (keyboard + form friendly) with a custom animated box.
 export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
   ({ label, error, className, id, ...props }, ref) => {
     const autoId = React.useId();

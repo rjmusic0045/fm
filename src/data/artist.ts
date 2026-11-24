@@ -1,8 +1,6 @@
-/**
- * Demo artist profile (fictional data) for the /artist screen.
- * Cover images: picsum.photos seeded photos (stable per seed, demo only).
- * Audio: royalty-free SoundHelix examples, same as the main catalog.
- */
+// Demo artist profile (fictional data) for the /artist screen.
+// Cover images: picsum.photos seeded photos (stable per seed, demo only).
+// Audio: royalty-free SoundHelix examples, same as the main catalog.
 import type { Palette } from "@/data/catalog";
 
 const helix = (n: number) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${n}.mp3`;
@@ -13,7 +11,7 @@ export interface ArtistTrack {
   title: string;
   artist: string;
   genre: string;
-  /** seconds */
+  // seconds
   duration: number;
   src: string;
   image: string;
@@ -22,9 +20,9 @@ export interface ArtistTrack {
   likes: number;
   reposts: number;
   comments: number;
-  /** ISO date */
+  // ISO date
   postedAt: string;
-  /** Present when this track appears as a repost on the profile. */
+  // Present when this track appears as a repost on the profile.
   repostedFrom?: string;
 }
 

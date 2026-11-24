@@ -3,8 +3,9 @@ import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { jsonError } from "@/lib/api";
 import { AUDIO_TYPES, IMAGE_TYPES, MAX_AUDIO_BYTES, MAX_IMAGE_BYTES, saveUpload } from "@/lib/storage";
+import { LANGUAGES } from "@/config/taxonomy";
 
-/** Shared parsing/upload helpers for the admin multipart APIs. */
+// Shared parsing/upload helpers for the admin multipart APIs.
 
 export const accessSchema = z.enum(["FREE", "PREMIUM"]);
 
@@ -46,7 +47,7 @@ export const slugify = (s: string) =>
     .replace(/[\s_-]+/g, "-")
     .slice(0, 60) || "item";
 
-/** URL slug with a short random suffix so titles can repeat. */
+// URL slug with a short random suffix so titles can repeat.
 export const uniqueSlug = (title: string) => `${slugify(title)}-${randomBytes(3).toString("hex")}`;
 
 const PALETTES: [string, string][] = [
@@ -59,20 +60,20 @@ const PALETTES: [string, string][] = [
 ];
 export const randomPalette = () => PALETTES[Math.floor(Math.random() * PALETTES.length)];
 
-/** Reads a text field: undefined if absent, trimmed string otherwise. */
+// Reads a text field: undefined if absent, trimmed string otherwise.
 export const field = (form: FormData, name: string): string | undefined => {
   const v = form.get(name);
   return typeof v === "string" ? v.trim() : undefined;
 };
 
-/** "true"/"on"/"1" → true, "false"/"off"/"0" → false, absent → undefined. */
+// "true"/"on"/"1" → true, "false"/"off"/"0" → false, absent → undefined.
 export const boolField = (form: FormData, name: string): boolean | undefined => {
   const v = field(form, name);
   if (v === undefined || v === "") return undefined;
   return ["true", "on", "1", "yes"].includes(v.toLowerCase());
 };
 
-/** Optional ObjectId reference: "" or "none" clears it (null), absent leaves it (undefined). */
+// Optional ObjectId reference: "" or "none" clears it (null), absent leaves it (undefined).
 export const refField = (form: FormData, name: string): string | null | undefined => {
   const v = field(form, name);
   if (v === undefined) return undefined;
@@ -82,7 +83,7 @@ export const refField = (form: FormData, name: string): string | null | undefine
 
 type FileResult = { url?: string; error?: Response };
 
-/** Validates and stores an optional image upload field. */
+// Validates and stores an optional image upload field.
 export async function readImage(form: FormData, name: string): Promise<FileResult> {
   const file = form.get(name);
   if (!(file instanceof File) || file.size === 0) return {};
@@ -92,7 +93,7 @@ export async function readImage(form: FormData, name: string): Promise<FileResul
   return { url: await saveUpload("covers", file, ext) };
 }
 
-/** Validates and stores a required/optional audio upload field. */
+// Validates and stores a required/optional audio upload field.
 export async function readAudio(form: FormData, name: string, required: boolean): Promise<FileResult> {
   const file = form.get(name);
   if (!(file instanceof File) || file.size === 0) {
@@ -111,3 +112,40 @@ export async function readForm(req: Request): Promise<FormData | null> {
     return null;
   }
 }
+
+// Language from the shared list: "" clears it (null), absent leaves it (undefined), unknown -> error.
+export function languageField(form: FormData, name = "language"): string | null | undefined | { error: string } {
+  const v = field(form, name);
+  if (v === undefined) return undefined;
+  if (v === "") return null;
+  return (LANGUAGES as readonly string[]).includes(v) ? v : { error: `Unknown language "${v}".` };
+}
+
+// Date (YYYY-MM-DD or ISO): "" clears (null), absent leaves (undefined), invalid -> error.
+export function dateField(form: FormData, name: string): Date | null | undefined | { error: string } {
+  const v = field(form, name);
+  if (v === undefined) return undefined;
+  if (v === "") return null;
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? { error: `Invalid date for ${name}.` } : d;
+}
+
+// Publish controls from a form:
+// publishMode = "now" | "draft" | "schedule", publishAt = ISO datetime (schedule only).
+// Returns the isActive/publishAt to store, undefined when the form didn't send publishMode.
+export function publishFields(form: FormData): { isActive: boolean; publishAt: Date | null } | undefined | { error: string } {
+  const mode = field(form, "publishMode");
+  if (mode === undefined || mode === "") return undefined;
+  if (mode === "now") return { isActive: true, publishAt: null };
+  if (mode === "draft") return { isActive: false, publishAt: null };
+  if (mode === "schedule") {
+    const at = dateField(form, "publishAt");
+    if (!(at instanceof Date)) return { error: "Choose a date and time to schedule the release." };
+    if (at.getTime() <= Date.now()) return { error: "The scheduled time must be in the future." };
+    return { isActive: true, publishAt: at };
+  }
+  return { error: "Unknown publish option." };
+}
+
+export const isFieldError = (v: unknown): v is { error: string } =>
+  typeof v === "object" && v !== null && !(v instanceof Date) && "error" in v;

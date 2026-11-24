@@ -6,7 +6,7 @@ import { deleteUpload } from "@/lib/storage";
 
 export const runtime = "nodejs";
 
-/** Admin: create an artist (multipart: name, bio?, city?, verified?, image?). */
+// Admin: create an artist (multipart: name, bio?, city?, verified?, image?).
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return jsonError(403, "FORBIDDEN", "Invalid origin.");
   if (!(await getAdminSession())) return jsonError(403, "FORBIDDEN", "Admins only.");

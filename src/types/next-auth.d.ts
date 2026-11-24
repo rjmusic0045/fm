@@ -8,18 +8,18 @@ declare module "next-auth" {
       role: Role;
       onboarded: boolean;
     } & DefaultSession["user"];
-    /** Set when this device was signed out because the account logged in elsewhere. */
+    // Set when this device was signed out because the account logged in elsewhere.
     revoked?: boolean;
-    /** Epoch ms of this login (used to show login-time notices once). */
+    // Epoch ms of this login (used to show login-time notices once).
     loginAt?: number;
   }
 
   interface User {
     role?: Role;
     onboarded?: boolean;
-    /** Credentials sign-in only: "Remember me" choice. */
+    // Credentials sign-in only: "Remember me" choice.
     remember?: boolean;
-    /** Device session id issued at credentials sign-in. */
+    // Device session id issued at credentials sign-in.
     sid?: string;
   }
 }
@@ -29,9 +29,9 @@ declare module "next-auth/jwt" {
     id?: string;
     role?: Role;
     onboarded?: boolean;
-    /** Epoch ms after which this session is no longer accepted (remember-me aware). */
+    // Epoch ms after which this session is no longer accepted (remember-me aware).
     sessionExpiresAt?: number;
-    /** Device session id; must equal User.activeSessionId to stay signed in. */
+    // Device session id; must equal User.activeSessionId to stay signed in.
     sid?: string;
     sidCheckedAt?: number;
     loginAt?: number;

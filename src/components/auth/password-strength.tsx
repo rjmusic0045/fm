@@ -26,7 +26,7 @@ export function passwordScore(p: string): number {
   return Math.min(4, Math.max(0, score - 1));
 }
 
-/** Live strength meter with a rule checklist. */
+// Live strength meter with a rule checklist.
 export function PasswordStrength({ password, id }: { password: string; id?: string }) {
   const score = passwordScore(password);
   const level = levels[score];

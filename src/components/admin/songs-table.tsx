@@ -3,7 +3,20 @@
 import * as React from "react";
 import { Eye, EyeOff, Pause, Pencil, Play } from "lucide-react";
 import { CoverArt } from "@/components/player/cover-art";
-import { AccessBadge, AccessSelect, DeleteButton, EditorDialog, Field, FormError, inputClass, useAdminAction } from "@/components/admin/kit";
+import {
+  AccessBadge,
+  AccessSelect,
+  DeleteButton,
+  EditorDialog,
+  Field,
+  FormError,
+  LanguageSelect,
+  PublishControl,
+  StatusBadge,
+  initialPublishMode,
+  inputClass,
+  useAdminAction,
+} from "@/components/admin/kit";
 import type { Option } from "@/components/admin/upload-form";
 import { Button } from "@/components/ui/button";
 import { dtoToItem, type SongDTO } from "@/lib/song-dto";
@@ -26,7 +39,13 @@ function SongEditor({ song, artists, albums, onClose }: { song: SongDTO; artists
       artistId: artistId || null,
       ...(artistId ? {} : { artist: String(fd.get("artist") ?? "").trim() }),
       albumId: String(fd.get("albumId") ?? "") || null,
+      language: String(fd.get("language") ?? "") || null,
+      releaseDate: fd.get("releaseDate") ? new Date(String(fd.get("releaseDate"))).toISOString() : null,
+      // Release control -> isActive + publishAt
+      isActive: fd.get("publishMode") !== "draft",
+      publishAt: fd.get("publishMode") === "schedule" && fd.get("publishAt") ? String(fd.get("publishAt")) : null,
     };
+    if (fd.get("publishMode") === "schedule" && !body.publishAt) return;
     void run(
       () => fetch(`/api/admin/songs/${song.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }),
       onClose,
@@ -64,7 +83,14 @@ function SongEditor({ song, artists, albums, onClose }: { song: SongDTO; artists
           </select>
         </Field>
       </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <LanguageSelect defaultValue={song.language} />
+        <Field label="Release date">
+          <input type="date" name="releaseDate" defaultValue={song.releaseDate?.slice(0, 10) ?? ""} className={inputClass} />
+        </Field>
+      </div>
       <AccessSelect defaultValue={song.ownAccess} />
+      <PublishControl defaultMode={initialPublishMode(song.isActive, song.publishAt)} defaultAt={song.publishAt} />
       <FormError error={error} />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onClose}>
@@ -128,6 +154,7 @@ function Row({
             <p className="truncate font-medium">{song.title}</p>
             <p className="truncate text-xs text-muted-foreground">
               {song.artist} · {song.album === "Single" ? song.genre : song.album}
+              {song.language ? ` · ${song.language}` : ""}
               {!song.uploaded && <span className="ml-1 rounded bg-muted px-1">demo</span>}
             </p>
           </div>
@@ -141,14 +168,7 @@ function Row({
       <td className="px-2 text-right tabular-nums">{song.listeners.toLocaleString("en-IN")}</td>
       <td className="px-2 text-right tabular-nums">{song.likes.toLocaleString("en-IN")}</td>
       <td className="px-2">
-        <span
-          className={cn(
-            "inline-block rounded-full px-2 py-0.5 text-xs font-medium",
-            song.isActive ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground",
-          )}
-        >
-          {song.isActive ? "Live" : "Hidden"}
-        </span>
+        <StatusBadge isActive={song.isActive} publishAt={song.publishAt} />
       </td>
       <td className="py-2 pl-2 pr-4">
         <div className="flex justify-end gap-1">

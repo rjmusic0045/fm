@@ -11,7 +11,7 @@ type Props =
   | { songs: SongDTO[]; episodes?: never; show?: never }
   | { songs?: never; episodes: EpisodeItemData[]; show: { title: string; coverUrl: string | null; palette: Palette; premium: boolean } };
 
-/** Plays a whole album/artist/show from the top, or toggles it if already playing. */
+// Plays a whole album/artist/show from the top, or toggles it if already playing.
 export function PlayAllButton(props: Props) {
   const items: PlayableItem[] = props.songs ? props.songs.map(dtoToItem) : props.episodes.map((e) => episodeToItem(e, props.show));
   const playQueue = usePlayer((s) => s.playQueue);
